@@ -1,0 +1,4 @@
+# the policies match on a namespace label; the CLI needs to be told what the namespaces look like
+namespaceSelector:
+  - name: team-a
+    labels: { tenant: "true" }

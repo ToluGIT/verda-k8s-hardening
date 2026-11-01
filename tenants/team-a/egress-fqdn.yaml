@@ -1,0 +1,12 @@
+# team-a may call api.github.com and nothing else outside the cluster. Any other name resolves (DNS is allowed)
+# but the connection is dropped and Hubble shows it. This is the DNS/egress control from the brief.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata: { name: egress-github-api-only, namespace: team-a }
+spec:
+  endpointSelector: {}
+  egress:
+    - toFQDNs:
+        - matchName: api.github.com
+      toPorts:
+        - ports: [{ port: "443", protocol: TCP }]

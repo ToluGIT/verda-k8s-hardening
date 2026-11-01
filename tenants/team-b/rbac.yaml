@@ -1,0 +1,23 @@
+# One service account per team, bound to a namespaced Role. No ClusterRoleBindings for tenants, ever.
+# The Role cannot grant more than it has (RBAC escalation check), and it has no access to RBAC objects itself.
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: team-b-dev, namespace: team-b }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { name: team-b-dev, namespace: team-b }
+rules:
+  - apiGroups: ["", "apps", "batch"]
+    resources: [pods, pods/log, services, configmaps, secrets, deployments, replicasets, jobs, cronjobs]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [cilium.io]
+    resources: [ciliumnetworkpolicies]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: team-b-dev, namespace: team-b }
+subjects:
+  - { kind: ServiceAccount, name: team-b-dev, namespace: team-b }
+roleRef: { kind: Role, name: team-b-dev, apiGroup: rbac.authorization.k8s.io }

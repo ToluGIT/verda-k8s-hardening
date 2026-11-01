@@ -1,0 +1,39 @@
+# An image without a tag, or tagged :latest, cannot be audited or rolled back. Digest pins are fine too.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: require-tag
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaceSelector:
+                matchLabels: { tenant: "true" }
+      validate:
+        message: "Every container image needs an explicit tag or digest."
+        pattern:
+          spec:
+            containers:
+              - image: "*:* | *@sha256:*"
+            =(initContainers):
+              - image: "*:* | *@sha256:*"
+    - name: no-latest
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaceSelector:
+                matchLabels: { tenant: "true" }
+      validate:
+        message: "The :latest tag is not allowed."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+            =(initContainers):
+              - image: "!*:latest"

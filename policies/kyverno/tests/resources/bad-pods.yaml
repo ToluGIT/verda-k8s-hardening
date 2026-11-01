@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata: { name: privileged, namespace: team-a }
+spec:
+  containers:
+    - name: c
+      image: docker.io/library/busybox:1.37
+      securityContext: { privileged: true }
+---
+apiVersion: v1
+kind: Pod
+metadata: { name: latest-tag, namespace: team-a }
+spec:
+  securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+  containers:
+    - name: c
+      image: docker.io/library/busybox:latest
+      securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
+---
+apiVersion: v1
+kind: Pod
+metadata: { name: foreign-registry, namespace: team-a }
+spec:
+  securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+  containers:
+    - name: c
+      image: registry.example.internal/team/app:1.0.0
+      securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }

@@ -1,0 +1,24 @@
+# Tenant images come from a short allow-list. Anything else is a question, not a deployment.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-image-registries
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: allowed-registries
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaceSelector:
+                matchLabels: { tenant: "true" }
+      validate:
+        message: "Images must come from docker.io, ghcr.io, quay.io or registry.k8s.io."
+        pattern:
+          spec:
+            containers:
+              - image: "docker.io/* | ghcr.io/* | quay.io/* | registry.k8s.io/*"
+            =(initContainers):
+              - image: "docker.io/* | ghcr.io/* | quay.io/* | registry.k8s.io/*"

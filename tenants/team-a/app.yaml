@@ -1,0 +1,40 @@
+# A restricted-profile web app: non-root image, no privilege escalation, all capabilities dropped, read-only root.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: web, namespace: team-a, labels: { app: web } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: web } }
+  template:
+    metadata: { labels: { app: web } }
+    spec:
+      serviceAccountName: team-a-dev
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: web
+          image: docker.io/nginxinc/nginx-unprivileged:1.27.3
+          ports: [{ containerPort: 8080 }]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: cache, mountPath: /var/cache/nginx }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 200m, memory: 128Mi }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+        - { name: cache, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: web, namespace: team-a }
+spec:
+  selector: { app: web }
+  ports: [{ port: 80, targetPort: 8080 }]

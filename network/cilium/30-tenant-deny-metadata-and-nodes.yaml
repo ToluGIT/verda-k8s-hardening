@@ -1,0 +1,13 @@
+# Belt and braces: even if a later allow rule is too wide, tenants never reach node IPs, the kubelet or the
+# API server directly. Cilium evaluates deny rules before allow rules.
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: tenant-deny-host-and-control-plane
+spec:
+  description: tenants cannot reach nodes, kubelet, or the API server
+  endpointSelector:
+    matchLabels:
+      k8s:io.cilium.k8s.namespace.labels.tenant: "true"
+  egressDeny:
+    - toEntities: [host, remote-node, kube-apiserver]

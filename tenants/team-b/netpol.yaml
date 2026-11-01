@@ -1,0 +1,12 @@
+# Scoped allow on top of the clusterwide default deny: this namespace talks to itself and resolves DNS (clusterwide).
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata: { name: allow-same-namespace, namespace: team-b }
+spec:
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels: { k8s:io.kubernetes.pod.namespace: team-b }
+  egress:
+    - toEndpoints:
+        - matchLabels: { k8s:io.kubernetes.pod.namespace: team-b }

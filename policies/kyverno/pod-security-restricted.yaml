@@ -1,0 +1,23 @@
+# Pod Security Standards, restricted profile, applied by Kyverno so the failure message names the field.
+# Starts in Audit. Flipped to Enforce once the platform namespaces pass (see git history).
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: pod-security-restricted
+  annotations:
+    policies.kyverno.io/description: "Baseline + restricted PSS for every tenant namespace."
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: restricted
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaceSelector:
+                matchLabels: { tenant: "true" }
+      validate:
+        podSecurity:
+          level: restricted
+          version: latest
