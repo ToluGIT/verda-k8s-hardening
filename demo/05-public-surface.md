@@ -41,8 +41,44 @@ Date: 2026-11-01T19:10Z. Two vantage points: my laptop (149.241.162.239, the one
   worker-2  65.108.33.95    9153   closed/filtered
   worker-2  65.108.33.95    30080  closed/filtered
 
-# from a GitHub Actions runner (workflow_dispatch; log pasted verbatim)
-RUNNER_PLACEHOLDER
+# from a GitHub Actions runner (workflow_dispatch, run 41341375261; one line per probe, /dev/tcp with a 4s timeout)
+  runner public ip 74.249.180.179
+  cp-1      65.108.33.68    22     open
+  cp-1      65.108.33.68    6443   closed/filtered
+  cp-1      65.108.33.68    10250  closed/filtered
+  cp-1      65.108.33.68    10256  closed/filtered
+  cp-1      65.108.33.68    2379   closed/filtered
+  cp-1      65.108.33.68    2380   closed/filtered
+  cp-1      65.108.33.68    8472   closed/filtered
+  cp-1      65.108.33.68    4240   closed/filtered
+  cp-1      65.108.33.68    4244   closed/filtered
+  cp-1      65.108.33.68    9100   closed/filtered
+  cp-1      65.108.33.68    9153   closed/filtered
+  cp-1      65.108.33.68    30080  closed/filtered
+  worker-1  65.108.32.164   22     open
+  worker-1  65.108.32.164   6443   closed/filtered
+  worker-1  65.108.32.164   10250  closed/filtered
+  worker-1  65.108.32.164   10256  closed/filtered
+  worker-1  65.108.32.164   2379   closed/filtered
+  worker-1  65.108.32.164   2380   closed/filtered
+  worker-1  65.108.32.164   8472   closed/filtered
+  worker-1  65.108.32.164   4240   closed/filtered
+  worker-1  65.108.32.164   4244   closed/filtered
+  worker-1  65.108.32.164   9100   closed/filtered
+  worker-1  65.108.32.164   9153   closed/filtered
+  worker-1  65.108.32.164   30080  closed/filtered
+  worker-2  65.108.33.95    22     open
+  worker-2  65.108.33.95    6443   closed/filtered
+  worker-2  65.108.33.95    10250  closed/filtered
+  worker-2  65.108.33.95    10256  closed/filtered
+  worker-2  65.108.33.95    2379   closed/filtered
+  worker-2  65.108.33.95    2380   closed/filtered
+  worker-2  65.108.33.95    8472   closed/filtered
+  worker-2  65.108.33.95    4240   closed/filtered
+  worker-2  65.108.33.95    4244   closed/filtered
+  worker-2  65.108.33.95    9100   closed/filtered
+  worker-2  65.108.33.95    9153   closed/filtered
+  worker-2  65.108.33.95    30080  closed/filtered
 
 # the rule set on cp-1 (identical on the workers)
   table inet filter {
