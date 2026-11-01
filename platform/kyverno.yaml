@@ -13,12 +13,12 @@ spec:
     # a sync that hits a webhook timeout (kyverno starting, network blip) should retry, not sit OutOfSync until the next commit
     retry: { limit: 5, backoff: { duration: 30s, factor: 2, maxDuration: 5m } }
     syncOptions: [CreateNamespace=true, ServerSideApply=true, RespectIgnoreDifferences=true]
-  # the chart renders `labels: {}` on the CEL policy CRDs and the API server drops the empty map; not a real drift
+  # the chart renders empty `labels: {}` / `annotations: {}` on the CEL policy CRDs and the API server drops
+  # them, and it defaults conversion.strategy. Field-level diff done by hand; none of it is drift.
   ignoreDifferences:
     - group: apiextensions.k8s.io
       kind: CustomResourceDefinition
-      jqPathExpressions: [".metadata.labels"]
-      managedFieldsManagers: [kyverno]
+      jqPathExpressions: [".metadata.labels", ".metadata.annotations", ".spec.conversion"]
   source:
     repoURL: https://kyverno.github.io/kyverno/
     chart: kyverno

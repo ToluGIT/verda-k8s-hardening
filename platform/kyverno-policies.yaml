@@ -13,10 +13,14 @@ spec:
     # a sync that hits a webhook timeout (kyverno starting, network blip) should retry, not sit OutOfSync until the next commit
     retry: { limit: 5, backoff: { duration: 30s, factor: 2, maxDuration: 5m } }
     syncOptions: [CreateNamespace=true, ServerSideApply=true, SkipDryRunOnMissingResource=true, RespectIgnoreDifferences=true]
-  # Kyverno's controller writes defaults and status back into the ClusterPolicy under its own field manager.
-  # Ignore what kyverno manages; git owns the rest.
+  # The API server defaults four fields on a ClusterPolicy that the policy files do not set
+  # (admission, emitWarning, skipBackgroundRequests, allowExistingViolations). Checked by diffing live vs git.
   ignoreDifferences:
     - group: kyverno.io
       kind: ClusterPolicy
-      managedFieldsManagers: [kyverno, kyverno-admission-controller, kyverno-background-controller]
+      jqPathExpressions:
+        - ".spec.admission"
+        - ".spec.emitWarning"
+        - ".spec.rules[].skipBackgroundRequests"
+        - ".spec.rules[].validate.allowExistingViolations"
   source: { repoURL: git@github.com:ToluGIT/verda-k8s-hardening.git, targetRevision: main, path: policies/kyverno }
