@@ -23,4 +23,6 @@ spec:
         - ".spec.emitWarning"
         - ".spec.rules[].skipBackgroundRequests"
         - ".spec.rules[].validate.allowExistingViolations"
+        - ".spec.rules[].verifyImages[].useCache"
+        - ".spec.rules[].verifyImages[].attestors[].entries[].signatureAlgorithm"
   source: { repoURL: git@github.com:ToluGIT/verda-k8s-hardening.git, targetRevision: main, path: policies/kyverno }
