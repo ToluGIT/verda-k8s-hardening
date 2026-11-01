@@ -24,5 +24,9 @@ spec:
           rbacAssessmentScannerEnabled: true
           infraAssessmentScannerEnabled: true
         serviceMonitor: { enabled: true }
+        # the node collector runs a pod on every node, including the control plane, to run kube-bench style checks
+        nodeCollector:
+          tolerations:
+            - { key: node-role.kubernetes.io/control-plane, operator: Exists, effect: NoSchedule }
         trivy:
           ignoreUnfixed: false
