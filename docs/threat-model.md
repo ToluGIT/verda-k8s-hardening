@@ -54,6 +54,8 @@ there yet, it says so.
 - Kyverno's webhook is fail-closed everywhere except kube-system. Right for tenants; for platform namespaces it
   means a Kyverno outage blocks the platform's own rollouts. I hit this once (see worklog). Open question.
 - Single control plane node. Not a security control, but worth saying.
+- Grafana has no persistence (no storage class), so its local users vanish on a pod restart. Dashboards are
+  ConfigMaps and come back; the reviewer login has to be recreated. In production Grafana sits behind SSO.
 - The firewall relies on three fixed node IPs. Adding a node means editing a file and re-applying it on every node.
 - A compromised node has unrestricted host-level reach to the other two nodes: the node rule accepts every port from
   the peer IPs. Narrowing it to the cluster ports (6443, 2379-2380, 10250, 8472/udp, 4240, 4244) is a small change

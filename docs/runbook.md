@@ -131,7 +131,10 @@ kubectl -n monitoring create secret generic grafana-admin --from-literal=admin-u
 ```sh
 # cluster: the reviewer ServiceAccount and ClusterRole are in platform/reviewer/ (synced by Argo CD)
 kubectl -n reviewer create token reviewer --duration=720h        # goes into the reviewer kubeconfig, server 127.0.0.1:6443
-# grafana: a Viewer user, created through the API with the admin password from the monitoring-grafana secret
+# grafana: a Viewer user, created through the API with the admin password. Grafana has no persistent volume here
+# (no storage class on these VMs), so local users do not survive a Grafana pod restart and this has to be re-run;
+# dashboards are fine, they come from ConfigMaps. Found out when the admin-secret change restarted Grafana.
+# curl -u admin:$PW -H 'Content-Type: application/json' -X POST localhost:3000/api/admin/users -d '{"login":"reviewer","name":"Reviewer","password":"..."}'
 # argo cd: the local account `reviewer` (bootstrap/argocd/values.yaml) mapped to role:readonly; set its password:
 #   argocd account update-password --account reviewer   (as admin, over a port-forward)
 # ssh: the reviewer public key on cp-1 only, restricted to the API server tunnel
