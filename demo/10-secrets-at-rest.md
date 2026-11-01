@@ -1,18 +1,19 @@
 # Demo 10: secrets encrypted at rest
 
-Date: 2026-11-01T18:47Z. infra/kubeadm-config.yaml points the API server at an EncryptionConfiguration (aescbc) whose key was generated on cp-1 and never left it. Proof: write a secret, read the raw etcd value.
+Date: 2026-11-01T18:49Z. infra/kubeadm-config.yaml points the API server at an EncryptionConfiguration (aescbc) whose key was generated on cp-1 and never left it. Proof: write a secret, read the raw etcd value through the etcd pod (distroless image, so etcdctl is called directly).
 
 ```
 $ kubectl -n team-a create secret generic enc-probe --from-literal=token=plaintext-marker-12345
-$ kubectl -n kube-system exec etcd-cp-1 -- etcdctl get /registry/secrets/team-a/enc-probe   # first 120 bytes, non-printables as .
+$ kubectl -n kube-system exec etcd-cp-1 -- etcdctl --endpoints=https://127.0.0.1:2379 --cacert=... --cert=... --key=... \
+    get /registry/secrets/team-a/enc-probe --print-value-only | head -c 96   # non-printable bytes shown as .
 
 
-# the marker is not in etcd in the clear
-occurrences of plaintext-marker in the raw value: 0
+$ ... --print-value-only | grep -c plaintext-marker
+0
 
-# and the API server still decrypts it for an authorised caller
+# the API server still decrypts it for an authorised caller
 $ kubectl -n team-a get secret enc-probe -o jsonpath='{.data.token}' | base64 -d
 plaintext-marker-12345
 ```
 
-The value is prefixed k8s:enc:aescbc:v1:key1, which is the provider and key name from the encryption config. Rotation is a second key in the list plus a re-write of all secrets, which is not automated here.
+The stored value starts with k8s:enc:aescbc:v1:key1, the provider and key name from the encryption config, followed by ciphertext; the marker string does not appear anywhere in it. Key rotation means a second key in the providers list and a re-write of every secret, which is documented in infra/encryption.yaml.example and not automated here.
