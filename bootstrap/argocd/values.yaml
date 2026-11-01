@@ -6,6 +6,12 @@ configs:
     server.insecure: true
   cm:
     timeout.reconciliation: 60s
+    # reviewers log in as this account; it maps to Argo CD's built-in read-only role below
+    accounts.reviewer: login
+  rbac:
+    policy.default: ""
+    policy.csv: |
+      g, reviewer, role:readonly
 server:
   replicas: 1
 controller:

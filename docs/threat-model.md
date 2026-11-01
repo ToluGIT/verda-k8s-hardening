@@ -27,7 +27,7 @@ there yet, it says so.
 |---|---|---|---|---|
 | 1 | Reach the API server, kubelet, etcd or VXLAN from the internet | A1 | nftables on every node: default drop; 22 open (key only); 6443 from one admin IP; cluster ports only from the other nodes | demo/05 |
 | 2 | Run a privileged or host-mounting pod, escape to the node | A3 | Kyverno PSS restricted, Enforce, on every tenant namespace | demo/01 |
-| 3 | Pull an unknown or unpinned image | A3, A4 | Kyverno: tag or digest required, no :latest, registry allow-list | demo/01 |
+| 3 | Pull an image from an unknown publisher, or one whose tag can be silently repointed | A3, A4 | Kyverno: publisher allow-list; explicit tag or digest and no :latest (a mutable tag is still a mutable tag; only the repo's own path is rewritten to a digest at admission) | demo/01, demo/09 |
 | 4 | From a team-a pod, reach team-b pods or services | A2 | Cilium clusterwide default deny; per-namespace allow only to itself | demo/02 |
 | 5 | From a team-a pod, call home or exfiltrate over the internet | A2 | Egress default deny; team-a is allowed api.github.com:443 only, by FQDN | demo/02 |
 | 6 | From a team-a pod, reach the kubelet, the node, or the API server | A2 | Cilium egressDeny to host, remote-node and kube-apiserver entities (deny wins over any allow); no SA token mounted | demo/02, demo/04 |

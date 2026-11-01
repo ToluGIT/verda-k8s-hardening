@@ -29,14 +29,23 @@ resource Pod/team-a/latest was blocked due to the following policies
 disallow-latest-tag:
   no-latest: 'validation error: The :latest tag is not allowed. rule no-latest failed at path /spec/containers/0/image/'
 
-# 3. image from a registry not on the allow-list
-$ kubectl -n team-a run foreign --image=registry.example.internal/team/app:1.0.0 --restart=Never --overrides={"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"c","image":"registry.example.internal/team/app:1.0.0","command":["sleep","3600"],"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}}]}}
+# 3. image from a registry not on the allow-list (server-side dry run, policy as of 2026-11-01)
+$ kubectl -n team-a run foreign --image=registry.example.internal/team/app:1.0.0 --dry-run=server ...
 Error from server: admission webhook "validate.kyverno.svc-fail" denied the request: 
-
 resource Pod/team-a/foreign was blocked due to the following policies 
-
 restrict-image-registries:
-  allowed-registries: 'validation error: Images must come from docker.io, ghcr.io, quay.io or registry.k8s.io. rule allowed-registries failed at path /spec/containers/0/image/'
+  allowed-registries: 'validation error: Image publisher not on the allow-list (see policies/kyverno/restrict-image-registries.yaml). rule allowed-registries failed at path /spec/containers/0/image/'
+
+# 3b. an allow-listed registry but a publisher that is not on the list
+$ kubectl -n team-a run hubacct --image=docker.io/someoneelse/app:1.0.0 --dry-run=server ...
+Error from server: admission webhook "validate.kyverno.svc-fail" denied the request: 
+resource Pod/team-a/hubacct was blocked due to the following policies 
+restrict-image-registries:
+  allowed-registries: 'validation error: Image publisher not on the allow-list (see policies/kyverno/restrict-image-registries.yaml). rule allowed-registries failed at path /spec/containers/0/image/'
+
+# 3c. and an allow-listed publisher, for contrast (passes this rule; PSS still applies)
+$ kubectl -n team-a run okpub --image=docker.io/library/busybox:1.37 --dry-run=server -o name ...
+pod/okpub
 
 # 4. the compliant pod from the test suite, for contrast
 $ kubectl -n team-a apply -f policies/kyverno/tests/resources/good-pod.yaml

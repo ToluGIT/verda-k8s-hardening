@@ -20,8 +20,11 @@ rules:
       - { group: "rbac.authorization.k8s.io" }
       - { group: "kyverno.io" }
       - { group: "cilium.io" }
+  # token requests at Metadata: the response body is a live bearer token and must not land in the log
+  - level: Metadata
+    resources: [{ group: "", resources: ["serviceaccounts/token"] }]
   - level: RequestResponse
-    resources: [{ group: "", resources: ["pods/exec", "pods/attach", "pods/portforward", "serviceaccounts/token"] }]
+    resources: [{ group: "", resources: ["pods/exec", "pods/attach", "pods/portforward"] }]
   - level: Request
     verbs: ["create", "update", "patch", "delete"]
   - level: Metadata

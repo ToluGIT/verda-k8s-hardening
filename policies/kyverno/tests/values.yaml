@@ -7,3 +7,6 @@ namespaceSelector:
   - name: team-a
     labels:
       tenant: "true"
+  - name: team-b
+    labels:
+      tenant: "true"

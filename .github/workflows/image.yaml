@@ -49,7 +49,9 @@ jobs:
       - name: sbom attestation
         if: github.event_name == 'push'
         run: |
-          # pinned release, checksum verified against the release's checksums file (which is itself cosign-signed upstream)
+          # pinned release, checksum verified against the release's checksums file. Both come from the same release, so
+          # this catches a corrupt or swapped archive, not a compromised release; verifying the upstream signature on the
+          # checksums file would close that and is not done here.
           curl -fsSLo syft.tgz https://github.com/anchore/syft/releases/download/v1.55.0/syft_1.55.0_linux_amd64.tar.gz
           curl -fsSLo syft.sums https://github.com/anchore/syft/releases/download/v1.55.0/syft_1.55.0_checksums.txt
           grep ' syft_1.55.0_linux_amd64.tar.gz$' syft.sums | sed 's# syft_1.55.0_linux_amd64.tar.gz# syft.tgz#' | sha256sum -c -

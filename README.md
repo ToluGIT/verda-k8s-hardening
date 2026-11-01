@@ -29,7 +29,7 @@ Start with `docs/summary.md` (one page). Then `demo/` for the proof, `docs/threa
 
 ## Access for reviewers
 
-Nothing is exposed publicly except SSH (key only) and the API server to one admin IP. Everything else is reached
+Nothing is exposed publicly except SSH (key only: PasswordAuthentication no, PermitRootLogin prohibit-password, see demo/05) and the API server to one admin IP. Everything else is reached
 through an SSH tunnel to the control plane. You need the reviewer SSH key and the reviewer kubeconfig, both sent
 separately, not in this repo. The key cannot open a shell: on cp-1 it is restricted to forwarding 127.0.0.1:6443.
 The kubeconfig is a ServiceAccount token bound to `platform/reviewer/reviewer-readonly.yaml`: get/list/watch on
@@ -46,7 +46,7 @@ kubectl -n monitoring port-forward svc/monitoring-grafana 3000:80
 open http://localhost:3000/d/trivy-operator            # Trivy dashboard
 open http://localhost:3000/alerting/list               # the four security alerts
 
-# 3. Argo CD (user: admin, password sent separately)
+# 3. Argo CD (user: reviewer, read-only role, password sent separately)
 kubectl -n argocd port-forward svc/argocd-server 8080:80
 open http://localhost:8080
 

@@ -4,8 +4,8 @@
 
 Three Verda CPU VMs in FIN-01 running a kubeadm 1.36 cluster: one control plane, two workers, public IPs only.
 Cilium is the CNI and replaces kube-proxy; Hubble records every flow. Argo CD syncs everything after the CNI from
-this repo. Kyverno enforces the restricted Pod Security Standard, pinned tags, a registry allow-list and cosign
-signatures on tenant workloads. Trivy Operator scans images, workload config and the nodes. Tetragon records
+this repo. Kyverno enforces the restricted Pod Security Standard, an explicit tag or digest (no :latest), a publisher
+allow-list, and cosign signatures with digest rewriting for the image this repo builds. Trivy Operator scans images, workload config and the nodes. Tetragon records
 process activity on every node. kube-prometheus-stack carries four alerts and a Trivy dashboard. Two tenant
 namespaces, team-a and team-b, each with its own service account, quota, and a default-deny network they can only
 leave for DNS and (team-a) api.github.com.

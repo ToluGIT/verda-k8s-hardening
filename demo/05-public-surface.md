@@ -80,6 +80,25 @@ Date: 2026-11-01T19:10Z. Two vantage points: my laptop (149.241.162.239, the one
   worker-2  65.108.33.95    9153   closed/filtered
   worker-2  65.108.33.95    30080  closed/filtered
 
+# sshd configuration on each node (sshd -T), and the one reviewer key, restricted
+  cp-1      permitrootlogin without-password pubkeyauthentication yes passwordauthentication no kbdinteractiveauthentication no 
+  cp-1      authorized_keys: 2 keys; reviewer key: 1
+  worker-1  permitrootlogin without-password pubkeyauthentication yes passwordauthentication no kbdinteractiveauthentication no 
+  worker-1  authorized_keys: 1 keys; reviewer key: 0
+  worker-2  permitrootlogin without-password pubkeyauthentication yes passwordauthentication no kbdinteractiveauthentication no 
+  worker-2  authorized_keys: 1 keys; reviewer key: 0
+  cp-1 reviewer key options: restrict,port-forwarding,permitopen="127.0.0.1:6443",command="/bin/false"
+
+# password authentication from outside
+$ ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no root@65.108.33.68
+root@65.108.33.68: Permission denied (publickey).
+
+# the reviewer key: no shell, only the one forward
+$ ssh -i verda-reviewer root@65.108.33.68 id
+(no output; the key's forced command is /bin/false, exit status 1)
+$ ssh -i verda-reviewer -N -L 16444:127.0.0.1:22 root@65.108.33.68   # then connect to 16444
+channel 2: open failed: administratively prohibited: open failed
+
 # the rule set on cp-1 (identical on the workers)
   table inet filter {
   	chain input {
@@ -115,4 +134,4 @@ Date: 2026-11-01T19:10Z. Two vantage points: my laptop (149.241.162.239, the one
        95 DPT=445
 ```
 
-From the admin IP: 22 and 6443 answer, nothing else. From the runner: 22 only. The kubelet, etcd, the VXLAN port, node-exporter and CoreDNS metrics are reachable from the other two nodes and from pods, and from nowhere else. The remaining exposure is SSH itself, key-only, and the reviewer key cannot open a shell (README).
+From the admin IP: 22 and 6443 answer, nothing else. From the runner: 22 only. The kubelet, etcd, the VXLAN port, node-exporter and CoreDNS metrics are reachable from the other two nodes and from pods, and from nowhere else. The remaining exposure is SSH itself: password authentication is off in sshd, and the reviewer key cannot open a shell or forward anything except the API server port. UDP 8472 (VXLAN) cannot be probed meaningfully from outside with a TCP connect; what protects it is the source-address rule plus the anti-spoof drop for pod-CIDR sources on eth0, and the threat model says what that assumes about the provider's network.

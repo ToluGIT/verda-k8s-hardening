@@ -36,6 +36,15 @@ kernel.panic_on_oops = 1
 EOF2
 sysctl --system
 
+# sshd: keys only. The image allows password auth by default.
+cat >/etc/ssh/sshd_config.d/10-key-only.conf <<EOF2
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin prohibit-password
+PubkeyAuthentication yes
+EOF2
+sshd -t && systemctl reload ssh
+
 apt-get update
 apt-get install -y apt-transport-https ca-certificates curl gpg containerd nftables cri-tools
 mkdir -p /etc/containerd
@@ -116,6 +125,8 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.pas
 # cluster: the reviewer ServiceAccount and ClusterRole are in platform/reviewer/ (synced by Argo CD)
 kubectl -n reviewer create token reviewer --duration=720h        # goes into the reviewer kubeconfig, server 127.0.0.1:6443
 # grafana: a Viewer user, created through the API with the admin password from the monitoring-grafana secret
+# argo cd: the local account `reviewer` (bootstrap/argocd/values.yaml) mapped to role:readonly; set its password:
+#   argocd account update-password --account reviewer   (as admin, over a port-forward)
 # ssh: the reviewer public key on cp-1 only, restricted to the API server tunnel
 echo 'restrict,port-forwarding,permitopen="127.0.0.1:6443",command="/bin/false" ssh-ed25519 AAAA... verda reviewer' >> /root/.ssh/authorized_keys
 ```

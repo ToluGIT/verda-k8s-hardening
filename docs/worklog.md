@@ -71,3 +71,15 @@ argo-cd chart version used: 10.11.6
   vantage point; there was no audit-log evidence at all (demo/11 now); the Hubble excerpt in demo 02 only showed the
   kubelet drops. Not changed: the node-to-node rule still accepts every port between the three nodes (noted in the
   threat model as the wrong default), and the same-namespace policy is tenant isolation, not workload segmentation.
+- Second review pass. Fixed: reviewers had the Argo CD admin password, which can deploy anything regardless of the
+  read-only kubeconfig; they now get a local `reviewer` account mapped to role:readonly (can list and view, cannot
+  sync or delete; checked with `argocd account can-i`). The audit policy logged serviceaccounts/token responses at
+  RequestResponse, which writes live bearer tokens into audit.log; now Metadata. sshd was never configured, only
+  described; password and keyboard-interactive auth are now off on all nodes and demo 05 shows `sshd -T`. The
+  firewall now drops pod-CIDR sources arriving on eth0 (anti-spoof) before accepting pod-CIDR sources from the
+  Cilium interfaces. SecurityAgentDown fires on an absent DaemonSet, not only a degraded one. CI namespace values
+  now include team-b, so the tenant-manifest check covers both tenants (12 pass). Demo 01's registry case re-run
+  against the publisher allow-list. Demo 04 and 08 command lines now match their recorded events exactly. Reworded
+  the "pinned tags" claim: an explicit tag is required, but only the repo's own path is rewritten to a digest.
+  Still not done: verifying the upstream signature on syft's checksum file; probing UDP 8472 from outside in a way
+  that proves anything; narrowing the node-to-node rule to cluster ports.

@@ -47,6 +47,6 @@ exposed service to a cluster whose point is a small surface. The reviewer key ca
 cp-1 (`restrict,port-forwarding,permitopen=...` in authorized_keys, no shell), and the kubeconfig is a read-only
 ServiceAccount token with create on pods/portforward so the Grafana and Argo CD tunnels work.
 
-**One Trivy dashboard, four alerts.** The community Trivy dashboard answers "what is vulnerable where". The alerts
+**One Trivy dashboard, four alerts.** The community Trivy dashboard gives the counts by severity and type; the per-namespace and per-image panels in it depend on metrics the operator only emits with extra flags, and several are empty here, so the VulnerabilityReports themselves are the drill-down. The alerts
 are the four things an on-call would want paged for: a critical CVE in a tenant, a burst of admission denials, a
 burst of policy drops, a security agent missing from a node.

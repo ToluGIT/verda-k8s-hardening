@@ -4,7 +4,7 @@ Date: 2026-11-01T09:45Z. Someone gets a shell in team-a/web-5bc746474f-49sxr on 
 
 ```
 # inside the pod
-$ kubectl -n team-a exec web-5bc746474f-49sxr -- sh -c 'id; head -1 /etc/passwd; ls /var/run/secrets/kubernetes.io; wget -O- http://169.254.169.254/; which nc python3'
+$ kubectl -n team-a exec web-5bc746474f-49sxr -- sh -c 'id; cat /etc/passwd | head -1; ls /var/run/secrets/kubernetes.io 2>&1; wget -q -O- -T 3 http://169.254.169.254/ 2>&1 | head -1; which nc python3'
 uid=101(nginx) gid=101(nginx) groups=101(nginx)
 root:x:0:0:root:/root:/bin/bash
 ls: cannot access '/var/run/secrets/kubernetes.io': No such file or directory
