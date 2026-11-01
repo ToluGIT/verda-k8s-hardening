@@ -17,7 +17,7 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: web
-          image: ghcr.io/tolugit/verda-k8s-hardening/web@sha256:1d7bac0b049f82bf18ec0f6217f2099ed5d210976728c8a8d1fc604ca0e32236
+          image: ghcr.io/tolugit/verda-k8s-hardening/web@sha256:9592375ba07eb80306e76013419bb38fe9ce1694d1409c150997753f85cc6790
           ports: [{ containerPort: 8080 }]
           securityContext:
             allowPrivilegeEscalation: false
