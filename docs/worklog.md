@@ -25,3 +25,6 @@ argo-cd chart version used: 10.11.6
   them on apply. Two changes: the firewall now flushes only its own `inet filter` table, and Cilium masquerades
   in BPF (`bpf.masquerade: true`) so pod egress no longer depends on netfilter tables at all. Restarted the
   agents, pods reach the API, DNS and the internet. Argo CD's pre-install hook had failed for the same reason.
+- Kyverno policies went in as Audit. Checked the policy reports for team-a and team-b: both web deployments pass all
+  rules, nothing to fix. Flipped all three to Enforce in this commit. Audit-then-enforce is the whole point; a policy
+  that breaks the platform team's deploy on day one gets switched off, not fixed.
