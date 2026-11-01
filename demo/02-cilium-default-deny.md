@@ -46,24 +46,27 @@ $ kubectl -n team-a exec web-f9798d7d4-c5x4d -- curl -sk -m 5 -o /dev/null -w "%
 000
 command terminated with exit code 28
 
-# what Hubble recorded for team-a since 19:03:33 UTC, one line per destination (hubble observe --namespace team-a --verdict DROPPED --since 3m)
-   1 Nov  1 19:04:04.052: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.32.164:10250 (remote-node) policy-verdict:L3-Only EGRESS DENIED (TCP Flags: SYN)
-   1 Nov  1 19:04:04.052: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.32.164:10250 (remote-node) Policy denied by denylist DROPPED (TCP Flags: SYN)
-   1 Nov  1 19:04:03.028: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.32.164:10250 (remote-node) policy-verdict:L3-Only EGRESS DENIED (TCP Flags: SYN)
-   1 Nov  1 19:04:03.028: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.32.164:10250 (remote-node) Policy denied by denylist DROPPED (TCP Flags: SYN)
-   1 Nov  1 19:04:02.004: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.32.164:10250 (remote-node) policy-verdict:L3-Only EGRESS DENIED (TCP Flags: SYN)
-   1 Nov  1 19:04:02.004: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.32.164:10250 (remote-node) Policy denied by denylist DROPPED (TCP Flags: SYN)
-   1 Nov  1 19:04:00.980: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.32.164:10250 (remote-node) policy-verdict:L3-Only EGRESS DENIED (TCP Flags: SYN)
-   1 Nov  1 19:04:00.980: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.32.164:10250 (remote-node) Policy denied by denylist DROPPED (TCP Flags: SYN)
-   1 Nov  1 19:03:59.929: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.32.164:10250 (remote-node) policy-verdict:L3-Only EGRESS DENIED (TCP Flags: SYN)
-   1 Nov  1 19:03:59.929: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.32.164:10250 (remote-node) Policy denied by denylist DROPPED (TCP Flags: SYN)
-   1 Nov  1 19:03:58.292: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.33.68:6443 (kube-apiserver) policy-verdict:L3-Only EGRESS DENIED (TCP Flags: SYN)
-   1 Nov  1 19:03:58.292: team-a/web-f9798d7d4-c5x4d (ID:31476) <> 65.108.33.68:6443 (kube-apiserver) Policy denied by denylist DROPPED (TCP Flags: SYN)
+# dropped flows involving team-a, grouped by destination and verdict (source column removed, counts on the left)
+# hubble observe --namespace team-a --verdict DROPPED --last 4000 -o compact
+  12 <> team-b/web-85bc747bb4-dzc6r (ID:57646) policy-verdict:none EGRESS DENIED
+  12 <> team-b/web-85bc747bb4-dzc6r (ID:57646) Policy denied DROPPED
+   6 <> 65.108.33.68 (kube-apiserver) policy-verdict:L3-Only EGRESS DENIED
+   6 <> 65.108.33.68 (kube-apiserver) Policy denied by denylist DROPPED
+   6 <> 65.108.32.164 (remote-node) policy-verdict:L3-Only EGRESS DENIED
+   6 <> 65.108.32.164 (remote-node) Policy denied by denylist DROPPED
+   6 <> 172.66.147.243 (world) policy-verdict:none EGRESS DENIED
+   6 <> 172.66.147.243 (world) Policy denied DROPPED
+   6 <> 104.20.23.154 (world) policy-verdict:none EGRESS DENIED
+   6 <> 104.20.23.154 (world) Policy denied DROPPED
 
-# and the allowed flows, for contrast (verdict FORWARDED, destination api.github.com and web.team-a)
-   1 Nov  1 19:03:47.255: team-a/web-f9798d7d4-c5x4d:49680 (ID:31476) <- kube-system/coredns-589f44dc88-cmz2f:53 (ID:31880) dns-response proxy FORWARDED (DNS Answer "140.82.121.5" TTL: 30 (P
-   1 Nov  1 19:03:47.238: team-a/web-f9798d7d4-c5x4d:49680 (ID:31476) <- kube-system/coredns-589f44dc88-cmz2f:53 (ID:31880) dns-response proxy FORWARDED (DNS Answer  TTL: 4294967295 (Proxy a
-   1 Nov  1 19:03:47.236: team-a/web-f9798d7d4-c5x4d:49680 (ID:31476) -> kube-system/coredns-589f44dc88-cmz2f:53 (ID:31880) dns-request proxy FORWARDED (DNS Query api.github.com. AAAA)
-   1 Nov  1 19:03:47.236: team-a/web-f9798d7d4-c5x4d:49680 (ID:31476) -> kube-system/coredns-589f44dc88-cmz2f:53 (ID:31880) dns-request proxy FORWARDED (DNS Query api.github.com. A)
-   1 Nov  1 19:03:47.235: team-a/web-f9798d7d4-c5x4d:49680 (ID:31476) <- kube-system/coredns-589f44dc88-cmz2f:53 (ID:31880) dns-response proxy FORWARDED (DNS Answer RCode: Non-Existent Domai
+# forwarded flows for contrast: the DNS lookups by name, and the two allowed destinations
+# hubble observe --namespace team-a --verdict FORWARDED --last 4000 -o compact
+  12 <- kube-system/coredns-589f44dc88-cmz2f dns-response proxy FORWARDED (DNS Answer RCode: Non-Existent Domain
+   6 <- kube-system/coredns-589f44dc88-79qql dns-response proxy FORWARDED (DNS Answer RCode: Non-Existent Domain
+   3 -> kube-system/coredns-589f44dc88-cmz2f dns-request proxy FORWARDED (DNS Query web.team-b.svc.cluster.local.team-a.svc.cluster.local. AAAA)
+   3 -> kube-system/coredns-589f44dc88-cmz2f dns-request proxy FORWARDED (DNS Query web.team-b.svc.cluster.local.team-a.svc.cluster.local. A)
+   3 -> kube-system/coredns-589f44dc88-cmz2f dns-request proxy FORWARDED (DNS Query web.team-b.svc.cluster.local.svc.cluster.local. AAAA)
+   3 -> kube-system/coredns-589f44dc88-cmz2f dns-request proxy FORWARDED (DNS Query web.team-b.svc.cluster.local.svc.cluster.local. A)
+   3 -> kube-system/coredns-589f44dc88-cmz2f dns-request proxy FORWARDED (DNS Query web.team-b.svc.cluster.local.cluster.local. AAAA)
+   3 -> kube-system/coredns-589f44dc88-cmz2f dns-request proxy FORWARDED (DNS Query web.team-b.svc.cluster.local.cluster.local. A)
 ```
