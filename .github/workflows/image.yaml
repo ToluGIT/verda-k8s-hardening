@@ -1,0 +1,53 @@
+# Build, scan, sign. The scan fails the job on a critical CVE that has a fix, so the image never gets a signature
+# and Kyverno never admits it. Signing is keyless: the GitHub OIDC identity of this workflow is the signer.
+name: image
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", ".github/workflows/image.yaml"]
+  pull_request:
+    paths: ["app/**", ".github/workflows/image.yaml"]
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+env:
+  IMAGE: ghcr.io/tolugit/verda-k8s-hardening/web
+jobs:
+  build-scan-sign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - name: build (local, not pushed yet)
+        uses: docker/build-push-action@v6
+        with: { context: app, load: true, tags: "${{ env.IMAGE }}:${{ github.sha }}" }
+      - name: scan, fail on critical with a fix
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "${{ env.IMAGE }}:${{ github.sha }}"
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+      - name: push
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        id: push
+        with: { context: app, push: true, tags: "${{ env.IMAGE }}:${{ github.sha }},${{ env.IMAGE }}:main" }
+      - uses: sigstore/cosign-installer@v3
+        if: github.event_name == 'push'
+      - name: sign (keyless, GitHub OIDC)
+        if: github.event_name == 'push'
+        run: cosign sign --yes "${IMAGE}@${{ steps.push.outputs.digest }}"
+      - name: sbom attestation
+        if: github.event_name == 'push'
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin >/dev/null
+          syft "${IMAGE}@${{ steps.push.outputs.digest }}" -o spdx-json > sbom.spdx.json
+          cosign attest --yes --predicate sbom.spdx.json --type spdxjson "${IMAGE}@${{ steps.push.outputs.digest }}"
+      - name: digest
+        if: github.event_name == 'push'
+        run: echo "${IMAGE}@${{ steps.push.outputs.digest }}"
