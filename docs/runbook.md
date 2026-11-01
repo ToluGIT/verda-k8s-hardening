@@ -119,6 +119,13 @@ kubectl apply -f bootstrap/argocd/root-app.yaml      # from here on Argo CD owns
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
 ```
 
+## 6b. Grafana admin secret (once, by hand)
+
+```sh
+# the kube-prometheus-stack chart reads the admin credentials from this secret instead of generating them
+kubectl -n monitoring create secret generic grafana-admin --from-literal=admin-user=admin --from-literal=admin-password="$(openssl rand -base64 18)"
+```
+
 ## 7. Reviewer access
 
 ```sh
