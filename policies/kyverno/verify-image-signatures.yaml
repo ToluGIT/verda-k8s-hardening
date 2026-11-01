@@ -19,9 +19,8 @@ spec:
                 matchLabels: { tenant: "true" }
       verifyImages:
         - imageReferences: ["ghcr.io/tolugit/verda-k8s-hardening/*"]
-          # cosign v3 stores the signature as an OCI-referrer Sigstore bundle, not the legacy sha256-<digest>.sig tag.
-          # With the default (Cosign) type Kyverno looked for the tag and said "no signatures found". See worklog.
-          type: SigstoreBundle
+          # Default attestor type (Cosign) reads the sha256-<digest>.sig tag. The workflow writes that tag as well as
+          # cosign v3's bundle referrer; Kyverno's SigstoreBundle verifier did not accept the bundle here (see worklog).
           mutateDigest: true
           verifyDigest: true
           required: true

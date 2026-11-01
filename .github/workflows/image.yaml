@@ -41,7 +41,11 @@ jobs:
         if: github.event_name == 'push'
       - name: sign (keyless, GitHub OIDC)
         if: github.event_name == 'push'
-        run: cosign sign --yes "${IMAGE}@${{ steps.push.outputs.digest }}"
+        # cosign v3 writes a Sigstore bundle as an OCI referrer. Also write the legacy sha256-<digest>.sig tag,
+        # which is what Kyverno's default Cosign attestor verifies. Both point at the same digest.
+        run: |
+          cosign sign --yes "${IMAGE}@${{ steps.push.outputs.digest }}"
+          cosign sign --yes --new-bundle-format=false "${IMAGE}@${{ steps.push.outputs.digest }}"
       - name: sbom attestation
         if: github.event_name == 'push'
         run: |

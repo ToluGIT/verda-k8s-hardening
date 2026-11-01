@@ -54,3 +54,8 @@ argo-cd chart version used: 10.11.6
   attestor type reads. Kyverno 1.19 has `type: SigstoreBundle` for exactly this. One line in the policy.
   Worth remembering: a signing tool upgrade on the CI side can silently break admission on the cluster side, and
   the failure mode is "nothing deploys", which is the right failure mode.
+- `type: SigstoreBundle` got further ("sigstore bundle verification failed: no matching signatures found") but still
+  refused an image `cosign verify` accepts with the same issuer and subject. Did not chase it. The workflow now also
+  writes the legacy `.sig` tag (`--new-bundle-format=false`) alongside the bundle, and the policy is back on the
+  default Cosign attestor. Two signatures of the same digest, one verifier path that is well trodden. The bundle
+  path stays on the list to revisit with a newer Kyverno.
