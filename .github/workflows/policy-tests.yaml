@@ -2,10 +2,10 @@
 name: policy tests
 on:
   pull_request:
-    paths: ["policies/**", "network/**", "tenants/**", "platform/**"]
+    paths: ["policies/**", "network/**", "tenants/**", "platform/**", ".github/workflows/policy-tests.yaml"]
   push:
     branches: [main]
-    paths: ["policies/**", "network/**", "tenants/**", "platform/**"]
+    paths: ["policies/**", "network/**", "tenants/**", "platform/**", ".github/workflows/policy-tests.yaml"]
 jobs:
   kyverno:
     runs-on: ubuntu-latest
