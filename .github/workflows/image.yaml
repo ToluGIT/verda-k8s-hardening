@@ -45,7 +45,7 @@ jobs:
         # which is what Kyverno's default Cosign attestor verifies. Both point at the same digest.
         run: |
           cosign sign --yes "${IMAGE}@${{ steps.push.outputs.digest }}"
-          cosign sign --yes --new-bundle-format=false "${IMAGE}@${{ steps.push.outputs.digest }}"
+          cosign sign --yes --new-bundle-format=false --use-signing-config=false "${IMAGE}@${{ steps.push.outputs.digest }}"
       - name: sbom attestation
         if: github.event_name == 'push'
         run: |
