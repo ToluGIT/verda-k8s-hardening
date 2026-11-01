@@ -1,4 +1,5 @@
 # A restricted-profile web app: non-root image, no privilege escalation, all capabilities dropped, read-only root.
+# Image is this repo's own build, pinned by digest and cosign-signed; Kyverno refuses anything on this path that is not.
 apiVersion: apps/v1
 kind: Deployment
 metadata: { name: web, namespace: team-b, labels: { app: web } }
@@ -16,7 +17,7 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: web
-          image: docker.io/nginxinc/nginx-unprivileged:1.27.3
+          image: ghcr.io/tolugit/verda-k8s-hardening/web@sha256:1d7bac0b049f82bf18ec0f6217f2099ed5d210976728c8a8d1fc604ca0e32236
           ports: [{ containerPort: 8080 }]
           securityContext:
             allowPrivilegeEscalation: false
