@@ -11,5 +11,16 @@ spec:
   syncPolicy:
     automated: { prune: true, selfHeal: true }
     retry: { limit: 5, backoff: { duration: 30s, factor: 2, maxDuration: 5m } }
-    syncOptions: [CreateNamespace=true, ServerSideApply=true, SkipDryRunOnMissingResource=true]
+    syncOptions: [CreateNamespace=true, ServerSideApply=true, SkipDryRunOnMissingResource=true, RespectIgnoreDifferences=true]
+  # the TracingPolicy CRD defaults maxData/resolve/returnCopy on every arg; checked live vs git, not drift
+  ignoreDifferences:
+    - group: cilium.io
+      kind: TracingPolicy
+      jqPathExpressions:
+        - ".spec.kprobes[].args[].maxData"
+        - ".spec.kprobes[].args[].resolve"
+        - ".spec.kprobes[].args[].returnCopy"
+        - ".spec.kprobes[].returnArg.maxData"
+        - ".spec.kprobes[].returnArg.resolve"
+        - ".spec.kprobes[].returnArg.returnCopy"
   source: { repoURL: git@github.com:ToluGIT/verda-k8s-hardening.git, targetRevision: main, path: runtime/tetragon }
