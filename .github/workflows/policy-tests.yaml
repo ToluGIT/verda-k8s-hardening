@@ -1,0 +1,36 @@
+# Policies are code. A broken or over-permissive Kyverno policy fails here, before Argo CD can sync it.
+name: policy tests
+on:
+  pull_request:
+    paths: ["policies/**", "network/**", "tenants/**", "platform/**"]
+  push:
+    branches: [main]
+    paths: ["policies/**", "network/**", "tenants/**", "platform/**"]
+jobs:
+  kyverno:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install kyverno cli
+        run: |
+          curl -fsSL https://github.com/kyverno/kyverno/releases/download/v1.19.2/kyverno-cli_v1.19.2_linux_x86_64.tar.gz | tar -xz kyverno
+          sudo install kyverno /usr/local/bin/kyverno
+      - name: run policy tests
+        run: kyverno test policies/kyverno/tests/
+      - name: apply policies to the tenant manifests (would any of our own workloads be denied?)
+        run: kyverno apply policies/kyverno/ --resource tenants/ --values-file policies/kyverno/tests/values.yaml 2>&1 | tail -5
+  yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: every manifest parses
+        run: |
+          pip -q install pyyaml
+          python3 - <<'PY'
+          import glob, yaml, sys
+          bad = 0
+          for f in glob.glob('**/*.yaml', recursive=True):
+              try: list(yaml.safe_load_all(open(f)))
+              except Exception as e: bad += 1; print(f, e)
+          sys.exit(bad)
+          PY
