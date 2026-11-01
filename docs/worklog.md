@@ -28,3 +28,11 @@ argo-cd chart version used: 10.11.6
 - Kyverno policies went in as Audit. Checked the policy reports for team-a and team-b: both web deployments pass all
   rules, nothing to fix. Flipped all three to Enforce in this commit. Audit-then-enforce is the whole point; a policy
   that breaks the platform team's deploy on day one gets switched off, not fixed.
+- Monitoring never got its Deployments. Argo's sync result: "failed calling webhook validate.kyverno.svc-fail ...
+  timeout". Kyverno's webhook is fail-closed for every namespace except kube-system, and the first monitoring sync
+  ran while pod networking was still broken, so the API server could not reach Kyverno and refused the Deployments.
+  Argo then sat there waiting for a Prometheus that would never exist. Forced a resync and added a retry policy to
+  every Application. Fail-closed admission is the right default for tenant namespaces; whether platform namespaces
+  should be fail-open is a real decision and it is in the threat model as an open question.
+- Trivy: both tenant images (nginx-unprivileged 1.27.3) carry 14 critical CVEs. Useful: it means the critical-CVE
+  alert will fire for real rather than from a planted image, and it is the subject of the CVE triage note.
