@@ -8,8 +8,7 @@ $ kubectl -n kube-system exec etcd-cp-1 -- etcdctl --endpoints=https://127.0.0.1
     get /registry/secrets/team-a/enc-probe --print-value-only | head -c 96   # non-printable bytes shown as .
 k8s:enc:aescbc:v1:key1:..0.@...9e..d`e..8{..).A....w...4].`j.S@...^4.n..j.e.3............M......
 $ ... --print-value-only | grep -c plaintext-marker
-
-
+0
 # the API server still decrypts it for an authorised caller
 $ kubectl -n team-a get secret enc-probe -o jsonpath='{.data.token}' | base64 -d
 plaintext-marker-12345
