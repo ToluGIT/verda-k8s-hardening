@@ -1,0 +1,32 @@
+# One detection, not a catalogue: any process touching the credential files on a node or in a container.
+# Based on Tetragon's upstream filename_monitoring example, narrowed from /etc/ to the files that matter.
+# Observe-only. Tetragon can SIGKILL on match; that comes after a week of looking at the baseline, not before.
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: sensitive-file-access
+spec:
+  kprobes:
+    - call: security_file_permission
+      syscall: false
+      return: true
+      args:
+        - { index: 0, type: file }
+        - { index: 1, type: int }      # 0x04 MAY_READ, 0x02 MAY_WRITE
+      returnArg: { index: 0, type: int }
+      selectors:
+        - matchArgs:
+            - index: 0
+              operator: Prefix
+              values: ["/etc/shadow", "/etc/sudoers", "/etc/kubernetes/pki", "/var/lib/kubelet/pki", "/root/.ssh"]
+    - call: security_path_truncate
+      syscall: false
+      return: true
+      args:
+        - { index: 0, type: path }
+      returnArg: { index: 0, type: int }
+      selectors:
+        - matchArgs:
+            - index: 0
+              operator: Prefix
+              values: ["/etc/shadow", "/etc/sudoers", "/etc/kubernetes/pki", "/var/lib/kubelet/pki", "/root/.ssh"]
