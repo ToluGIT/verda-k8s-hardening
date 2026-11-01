@@ -18,3 +18,10 @@ cilium chart version used: 1.20.4
 - nftables on every node: drop by default, nodes talk freely to each other, SSH from anywhere (key only), 6443 from
   my IP. Decision on SSH-from-anywhere: reviewers need a way in and I do not have their IPs; key-only SSH is the
   compromise, noted in the threat model as residual.
+argo-cd chart version used: 10.11.6
+- Pods had no DNS, no ClusterIP, no egress, while the nodes pulled images fine. Spent a while suspecting the
+  firewall, flushed it, still broken. `cilium-dbg status` said "Masquerading: IPTables". Cilium programs NAT and
+  its proxy TPROXY rules through iptables-nft, and my nftables.conf opened with `flush ruleset`, which deleted
+  them on apply. Two changes: the firewall now flushes only its own `inet filter` table, and Cilium masquerades
+  in BPF (`bpf.masquerade: true`) so pod egress no longer depends on netfilter tables at all. Restarted the
+  agents, pods reach the API, DNS and the internet. Argo CD's pre-install hook had failed for the same reason.

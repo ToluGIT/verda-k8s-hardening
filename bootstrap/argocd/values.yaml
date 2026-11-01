@@ -1,0 +1,20 @@
+# Argo CD runs without an ingress. Access is kubectl port-forward over an SSH tunnel; nothing is exposed publicly.
+global:
+  domain: argocd.local
+configs:
+  params:
+    server.insecure: true
+  cm:
+    timeout.reconciliation: 60s
+server:
+  replicas: 1
+controller:
+  replicas: 1
+repoServer:
+  replicas: 1
+applicationSet:
+  enabled: false
+notifications:
+  enabled: false
+dex:
+  enabled: false
