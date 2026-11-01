@@ -9,7 +9,7 @@ written once and I ran it on each node over SSH.
 |---|---|---|---|---|
 | cp-1 | control plane | 65.108.33.68 | CPU.4V.16G (AMD Rome+) | Ubuntu 24.04 Minimal |
 | worker-1 | worker | 65.108.32.164 | CPU.4V.16G | Ubuntu 24.04 Minimal |
-| worker-2 | worker | see docs/worklog.md | CPU.4V.16G | Ubuntu 24.04 Minimal |
+| worker-2 | worker | 65.108.33.95 | CPU.4V.16G | Ubuntu 24.04 Minimal |
 
 All in FIN-01. Verda only offers public IPs there (private networking is FIN-03 only), so node-to-node traffic
 goes over the public interface and the host firewall does the work. Login is `root@<ip>` with the SSH key
@@ -64,4 +64,30 @@ chmod 600 /etc/kubernetes/enc/encryption.yaml
 
 kubeadm init --config /root/kubeadm-config.yaml --upload-certs
 mkdir -p ~/.kube && cp /etc/kubernetes/admin.conf ~/.kube/config
+```
+
+## 3. Workers
+
+```sh
+# on cp-1, print a join command (token lives 24h, not committed)
+kubeadm token create --print-join-command
+# on each worker
+kubeadm join 65.108.33.68:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash> --node-name worker-N
+# kubelet serverTLSBootstrap=true means serving certs need approval once per node
+kubectl get csr; kubectl certificate approve <pending csr names>
+```
+
+## 4. Cilium (from the laptop, kubeconfig copied from /etc/kubernetes/admin.conf)
+
+```sh
+helm repo add cilium https://helm.cilium.io/
+helm install cilium cilium/cilium --version 1.20.4 -n kube-system -f bootstrap/cilium/values.yaml
+cilium status --wait
+```
+
+## 5. Host firewall (every node)
+
+```sh
+scp infra/nftables.conf root@<ip>:/etc/nftables.conf
+nft -c -f /etc/nftables.conf && nft -f /etc/nftables.conf && systemctl enable nftables
 ```

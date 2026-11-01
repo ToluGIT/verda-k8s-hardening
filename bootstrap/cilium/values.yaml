@@ -1,0 +1,26 @@
+# Cilium is the one component installed before Argo CD exists, because Argo CD needs a network.
+# kube-proxy was skipped at kubeadm init, so Cilium does service handling too.
+kubeProxyReplacement: true
+k8sServiceHost: 65.108.33.68
+k8sServicePort: 6443
+ipam:
+  mode: kubernetes
+routingMode: tunnel
+tunnelProtocol: vxlan
+# default-deny is done with CiliumClusterwideNetworkPolicy, not here, so the policy is visible in git
+policyEnforcementMode: default
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+  ui:
+    enabled: true
+  metrics:
+    enabled: ["dns", "drop", "tcp", "flow", "policy"]
+    enableOpenMetrics: true
+operator:
+  replicas: 1
+  prometheus:
+    enabled: true
+prometheus:
+  enabled: true

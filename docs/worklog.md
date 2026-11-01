@@ -12,3 +12,9 @@ Written as I go. Dates are UK time.
   kernel flag: vm/overcommit_memory expected 1 actual 0, kernel/panic expected 10, kernel/panic_on_oops expected 1".
   That is `protectKernelDefaults: true` doing its job. Set the three sysctls in /etc/sysctl.d/k8s.conf, reset, init again.
   Kept the flag; it is the kind of control the brief is asking for.
+cilium chart version used: 1.20.4
+- Three nodes joined. Cilium 1.20.4 with kubeProxyReplacement, vxlan, Hubble relay and UI. Default-deny comes next
+  as a CiliumClusterwideNetworkPolicy so it is reviewable in git rather than a Helm flag.
+- nftables on every node: drop by default, nodes talk freely to each other, SSH from anywhere (key only), 6443 from
+  my IP. Decision on SSH-from-anywhere: reviewers need a way in and I do not have their IPs; key-only SSH is the
+  compromise, noted in the threat model as residual.
