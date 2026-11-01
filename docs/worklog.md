@@ -36,3 +36,6 @@ argo-cd chart version used: 10.11.6
   should be fail-open is a real decision and it is in the threat model as an open question.
 - Trivy: both tenant images (nginx-unprivileged 1.27.3) carry 14 critical CVEs. Useful: it means the critical-CVE
   alert will fire for real rather than from a planted image, and it is the subject of the CVE triage note.
+- Image pipeline, first run: the Trivy gate failed the build. The fresh `1.29-alpine` base ships brotli-libs 1.2.0-r0
+  with a critical (CVE-2026-111497) that has a fix. So the image was never pushed or signed, which is the point of the
+  gate. Added `apk upgrade brotli-libs` to the Dockerfile instead of an ignore entry.
