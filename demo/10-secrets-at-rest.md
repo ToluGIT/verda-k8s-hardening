@@ -4,10 +4,11 @@ Date: 2026-11-01T18:49Z. infra/kubeadm-config.yaml points the API server at an E
 
 ```
 $ kubectl -n team-a create secret generic enc-probe --from-literal=token=plaintext-marker-12345
-$ kubectl -n kube-system exec etcd-cp-1 -- etcdctl --endpoints=https://127.0.0.1:2379 --cacert=... --cert=... --key=... \
+$ kubectl -n kube-system exec etcd-cp-1 -- etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+    --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key \
     get /registry/secrets/team-a/enc-probe --print-value-only | head -c 96   # non-printable bytes shown as .
 k8s:enc:aescbc:v1:key1:..0.@...9e..d`e..8{..).A....w...4].`j.S@...^4.n..j.e.3............M......
-$ ... --print-value-only | grep -c plaintext-marker
+$ kubectl -n kube-system exec etcd-cp-1 -- etcdctl <same flags> get /registry/secrets/team-a/enc-probe --print-value-only | grep -c plaintext-marker
 0
 # the API server still decrypts it for an authorised caller
 $ kubectl -n team-a get secret enc-probe -o jsonpath='{.data.token}' | base64 -d

@@ -2,15 +2,15 @@
 
 Five lines each. What I chose, what I did not, and why.
 
-**kubeadm, not RKE2.** RKE2 would have given me a CIS-shaped cluster faster. kubeadm meant every flag is mine:
-the audit policy, encryption at rest, `protectKernelDefaults`, `seccompDefault`, no kube-proxy. The brief asks what
-I picked and why; with RKE2 the honest answer to half of it would be "the distro did it".
+**kubeadm, not RKE2.** RKE2 would have given me a CIS-shaped cluster faster. kubeadm meant every flag is mine to set
+and to explain: the audit policy, encryption at rest, `protectKernelDefaults`, `seccompDefault`, no kube-proxy.
 
 **Cilium replaces kube-proxy.** One datapath instead of two. kube-proxy was skipped at init, so there is no iptables
 service path to reason about alongside BPF policy. Cost: the API server address is hard-coded in the Cilium values.
 
 **Default deny as a CiliumClusterwideNetworkPolicy, not a Helm flag.** Both work. The policy object is in git,
-it is reviewable, Argo CD owns it, and a tenant can read it to understand why their traffic is dropped.
+it is reviewable and Argo CD owns it. Tenants cannot read the clusterwide object with their namespaced role, so the
+README and the Hubble drop reason are how they learn why traffic is dropped.
 
 **Kyverno, not Gatekeeper.** The platform team should be able to read a policy without learning Rego. Kyverno
 policies look like the resources they govern, the CLI tests are trivial, and verifyImages is built in for later.

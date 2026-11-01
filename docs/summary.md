@@ -23,7 +23,9 @@ reports, the audit log, and an alert that fired on the tenant image's 14 critica
   The Hubble output for a cross-tenant request says `POLICY_DENIED`, and the deny to the host and API server shows
   `denied by denylist`, which is exactly what you want a tenant to be able to read.
 - The alert fired on the tenant image as deployed, before anything was planted for a demo.
-- GitOps for the policies: a bad policy fails the Kyverno CLI tests in GitHub Actions before Argo CD can see it.
+- GitOps for the policies: the Kyverno CLI tests run in GitHub Actions on every change. During this build I pushed
+  straight to main, so CI ran after Argo CD could already see the commit; with branch protection requiring the
+  checks (now enabled on main) a failing policy cannot be merged, which is the shape this would have in production.
 
 ## What did not work, and what I did
 
@@ -44,7 +46,7 @@ reports, the audit log, and an alert that fired on the tenant image's 14 critica
   interface, allowed by source IP. In production this is a private network.
 - SSH open to the internet, key only: reviewers need a way in and I do not have their IPs.
 - Tetragon observe-only: enforcement before a baseline produces false kills.
-- Four alerts, not forty.
+- Four alerts that an on-call would act on, instead of the chart's full default set.
 - Two signature formats on every image until Kyverno's bundle verifier is sorted, instead of pinning an old cosign.
 
 ## What is missing

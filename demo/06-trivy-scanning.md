@@ -27,7 +27,9 @@ team-b         replicaset-web-5bdd4b4b89                               Trivy   1
 team-b         resourcequota-team-b-quota                              Trivy   14m
 team-b         service-web                                             Trivy   14m
 
-# node (CIS) checks
-node-worker-1   Trivy   8m46s
-node-worker-2   Trivy   13m
+# node (CIS) checks, one report per node including the control plane (needed a toleration for the node collector, see worklog)
+$ kubectl get clusterinfraassessmentreports
+node-cp-1       Trivy   11h
+node-worker-1   Trivy   11h
+node-worker-2   Trivy   12h
 ```

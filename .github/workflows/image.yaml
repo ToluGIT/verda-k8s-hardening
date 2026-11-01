@@ -32,11 +32,16 @@ jobs:
           ignore-unfixed: true
           exit-code: "1"
           format: table
-      - name: push
+      - name: push the image that was scanned (no second build)
         if: github.event_name == 'push'
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         id: push
-        with: { context: app, push: true, tags: "${{ env.IMAGE }}:${{ github.sha }},${{ env.IMAGE }}:main" }
+        run: |
+          docker tag "${IMAGE}:${{ github.sha }}" "${IMAGE}:main"
+          docker push "${IMAGE}:${{ github.sha }}"
+          docker push "${IMAGE}:main"
+          digest=$(docker inspect --format '{{index .RepoDigests 0}}' "${IMAGE}:${{ github.sha }}" | cut -d@ -f2)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "pushed ${IMAGE}@$digest"
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         if: github.event_name == 'push'
       - name: sign (keyless, GitHub OIDC)

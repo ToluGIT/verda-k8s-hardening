@@ -99,7 +99,7 @@ $ ssh -i verda-reviewer root@65.108.33.68 id
 $ ssh -i verda-reviewer -N -L 16444:127.0.0.1:22 root@65.108.33.68   # then connect to 16444
 channel 2: open failed: administratively prohibited: open failed
 
-# the rule set on cp-1 (identical on the workers)
+# the rule set on cp-1 (identical on the workers), nft list table inet filter
   table inet filter {
   	chain input {
   		type filter hook input priority filter; policy drop;
@@ -109,6 +109,7 @@ channel 2: open failed: administratively prohibited: open failed
   		ip protocol icmp accept
   		ip6 nexthdr ipv6-icmp accept
   		ip saddr { 65.108.32.164, 65.108.33.68, 65.108.33.95 } accept
+  		iifname "eth0" ip saddr 10.244.0.0/16 counter packets 0 bytes 0 drop
   		ip saddr 10.244.0.0/16 accept
   		tcp dport 22 accept
   		ip saddr 149.241.162.239 tcp dport 6443 accept
@@ -125,13 +126,13 @@ channel 2: open failed: administratively prohibited: open failed
   }
 
 # dropped packets so far on cp-1 (kernel log, nft-drop prefix), by destination port
-  42702
-    28963 DPT=443
-     4433 DPT=67
-     3454 DPT=5678
-      685 DPT=80
-      186 DPT=23
-       95 DPT=445
+  46180
+    29270 DPT=443
+     5495 DPT=67
+     4299 DPT=5678
+      823 DPT=80
+      225 DPT=23
+      122 DPT=445
 ```
 
 From the admin IP: 22 and 6443 answer, nothing else. From the runner: 22 only. The kubelet, etcd, the VXLAN port, node-exporter and CoreDNS metrics are reachable from the other two nodes and from pods, and from nowhere else. The remaining exposure is SSH itself: password authentication is off in sshd, and the reviewer key cannot open a shell or forward anything except the API server port. UDP 8472 (VXLAN) cannot be probed meaningfully from outside with a TCP connect; what protects it is the source-address rule plus the anti-spoof drop for pod-CIDR sources on eth0, and the threat model says what that assumes about the provider's network.

@@ -2,7 +2,7 @@
 
 Date: 2026-11-01T19:10Z. infra/audit-policy.yaml is loaded by the API server (infra/kubeadm-config.yaml) and writes /var/log/kubernetes/audit.log on cp-1. Four things happened, then the matching events were pulled from the log with a few lines of Python over SSH (fields: level, verb, user, impersonatedUser, objectRef, responseStatus).
 
-What the policy records: secrets at Metadata (who touched which secret, never the content); RBAC, Kyverno and Cilium objects at RequestResponse (the full body); pods/exec, attach, portforward and token requests at RequestResponse; every other write at Request; the rest at Metadata, with kube-proxy, node and health-check noise dropped.
+What the policy records: secrets at Metadata (who touched which secret, never the content); RBAC, Kyverno and Cilium objects at RequestResponse (the full body); pods/exec, attach and portforward at RequestResponse; token requests at Metadata, because the response body is a live credential; every other write at Request; the rest at Metadata, with kube-proxy, node and health-check noise dropped.
 
 ```
 # 1. team-a's identity lists secrets in team-b (demo/03). Impersonated via kubectl --as, so both identities are in the event.

@@ -83,3 +83,12 @@ argo-cd chart version used: 10.11.6
   the "pinned tags" claim: an explicit tag is required, but only the repo's own path is rewritten to a digest.
   Still not done: verifying the upstream signature on syft's checksum file; probing UDP 8472 from outside in a way
   that proves anything; narrowing the node-to-node rule to cluster ports.
+- Third review pass. Fixed: demo 05 carried the firewall rule set from before the anti-spoof rule, re-captured; demo
+  commands that had been abbreviated with "..." or shown without their quoting are now the full commands as typed;
+  demo 03's quota section re-run with the events command shown and the self-heal revert explained; the image
+  workflow built twice, once to scan and once to push, so the scanned image and the pushed image were not provably
+  the same bytes: it now pushes the image it scanned, and the base is pinned by digest; demo 11 still said token
+  requests were at RequestResponse; demo 06 now lists the cp-1 node report; the "CI before Argo" sentence was only
+  true with branch protection, which is now on for main (required checks: kyverno, yaml) and the sentence says so;
+  the threat model now says the monitoring stack has no persistence at all, not only Grafana, and that Helm chart
+  provenance is not verified. Cut three more one-liners.

@@ -32,10 +32,12 @@ The tenants moved to the image this repo builds (demo/09). Trivy rescanned it: 0
 The metric behind the alert went to zero for both namespaces and the alert resolved on its own.
 
 ```
-$ promql: sum by (namespace, image_digest) (trivy_image_vulnerabilities{severity="Critical", namespace=~"team-.*"})
+# Prometheus query (via kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus 9090 and /api/v1/query):
+#   sum by (namespace, image_digest) (trivy_image_vulnerabilities{severity="Critical", namespace=~"team-.*"})
   team-a tolugit/verda-k8s-hardening/web sha256:9592375ba07e = 0
   team-b tolugit/verda-k8s-hardening/web sha256:9592375ba07e = 0
-$ kubectl get vulnerabilityreports -n team-a   (summary)   crit=0 high=10
+$ kubectl get vulnerabilityreports -n team-a -o jsonpath='{range .items[*]}{.report.artifact.digest} crit={.report.summary.criticalCount} high={.report.summary.highCount}{"\n"}{end}'
+sha256:9592375ba07eb80306e76013419bb38fe9ce1694d1409c150997753f85cc6790 crit=0 high=10
 ```
 
 That is the whole loop the brief asks for: scan, alert, triage (docs/cve-triage.md), rebuild on a smaller base with

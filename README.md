@@ -30,15 +30,15 @@ Start with `docs/summary.md` (one page). Then `demo/` for the proof, `docs/threa
 ## Access for reviewers
 
 Nothing is exposed publicly except SSH (key only: PasswordAuthentication no, PermitRootLogin prohibit-password, see demo/05) and the API server to one admin IP. Everything else is reached
-through an SSH tunnel to the control plane. You need the reviewer SSH key and the reviewer kubeconfig, both sent
-separately, not in this repo. The key cannot open a shell: on cp-1 it is restricted to forwarding 127.0.0.1:6443.
+through an SSH tunnel to the control plane. You need four things sent separately, not in this repo: the reviewer SSH key, the reviewer kubeconfig, the
+Grafana `reviewer` password and the Argo CD `reviewer` password. The key cannot open a shell: on cp-1 it is restricted to forwarding 127.0.0.1:6443.
 The kubeconfig is a ServiceAccount token bound to `platform/reviewer/reviewer-readonly.yaml`: get/list/watch on
 most things, no secrets, no exec, plus create on pods/portforward so the tunnels below work.
 
 ```sh
 # 1. API server through the tunnel (the key allows nothing else)
 ssh -i verda-reviewer -N -L 6443:127.0.0.1:6443 root@65.108.33.68 &
-export KUBECONFIG=./verda-reviewer.kubeconfig     # server: https://127.0.0.1:6443, read-only ClusterRole
+export KUBECONFIG=./verda-reviewer.kubeconfig     # server https://127.0.0.1:6443 with tls-server-name cp-1, so the API cert validates through the tunnel
 kubectl get nodes
 
 # 2. Grafana (user: reviewer, password sent separately)

@@ -36,7 +36,7 @@ there yet, it says so.
 | 9 | Run a known-vulnerable image and nobody notices | A4 | Trivy Operator scans every image; alert when a tenant image carries a critical CVE | demo/06, alert TenantImageHasCriticalCVE |
 | 10 | Get a shell in a pod and look around quietly | A2 | Tetragon records every exec with pod, binary and arguments; Hubble records every denied flow | demo/04, demo/02 |
 | 11 | Read secrets out of an etcd snapshot or backup taken without the key | A4, or anyone holding a backup | EncryptionConfiguration (aescbc) for secrets at rest. The key lives on cp-1 next to etcd, so this does not help against someone with root on cp-1; it helps against copies of the data | demo/10 |
-| 12 | Push a bad policy or manifest to the cluster | A4 | Everything after the CNI goes through Argo CD from this repo; policies have CLI tests in CI; audit before enforce | .github/workflows/policy-tests.yaml |
+| 12 | Push a bad policy or manifest to the cluster | A4 | Everything after the CNI goes through Argo CD from this repo; policies have CLI tests in CI and main is protected by those checks; audit before enforce. Not covered: the Helm charts Argo pulls (Kyverno, Trivy, monitoring, Tetragon) are version-pinned but their provenance is not verified and their rendered output is not reviewed in CI | .github/workflows/policy-tests.yaml |
 | 13 | Probe limits quietly, weaken a policy, exec into a pod | A3, insider | API server audit log: secrets at Metadata (who, which, never the content), RBAC, Kyverno and Cilium objects and exec at RequestResponse, other writes at Request | demo/11 |
 
 ## What is not covered, and I know it
@@ -54,8 +54,9 @@ there yet, it says so.
 - Kyverno's webhook is fail-closed everywhere except kube-system. Right for tenants; for platform namespaces it
   means a Kyverno outage blocks the platform's own rollouts. I hit this once (see worklog). Open question.
 - Single control plane node. Not a security control, but worth saying.
-- Grafana has no persistence (no storage class), so its local users vanish on a pod restart. Dashboards are
-  ConfigMaps and come back; the reviewer login has to be recreated. In production Grafana sits behind SSO.
+- No persistent storage anywhere in the monitoring stack (no storage class on these VMs): Prometheus metrics,
+  Alertmanager silences and notification state, and Grafana's local users all vanish when the pod is rescheduled.
+  Dashboards and alert rules come back from git. The demos' alert history is in the demo files, not in Prometheus.
 - The firewall relies on three fixed node IPs. Adding a node means editing a file and re-applying it on every node.
 - A compromised node has unrestricted host-level reach to the other two nodes: the node rule accepts every port from
   the peer IPs. Narrowing it to the cluster ports (6443, 2379-2380, 10250, 8472/udp, 4240, 4244) is a small change

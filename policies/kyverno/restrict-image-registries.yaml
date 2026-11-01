@@ -1,5 +1,5 @@
 # Tenant images come from a short allow-list of publishers, not whole registries: any Docker Hub account is not an
-# allow-list. Adding a publisher is a one-line pull request. Anything else is a question, not a deployment.
+# allow-list. Adding a publisher is a one-line pull request.
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
