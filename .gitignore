@@ -4,3 +4,4 @@ admin.conf
 *.key
 *.pem
 .env
+infra/encryption.yaml

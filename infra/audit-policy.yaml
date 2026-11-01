@@ -1,0 +1,27 @@
+# Audit what matters for a hostile-tenant cluster: secrets access, RBAC changes,
+# exec/attach, and anything at the cluster scope. Skip the noisy read-only churn.
+apiVersion: audit.k8s.io/v1
+kind: Policy
+omitStages: ["RequestReceived"]
+rules:
+  - level: None
+    users: ["system:kube-proxy", "system:apiserver"]
+    verbs: ["watch", "get", "list"]
+  - level: None
+    userGroups: ["system:nodes"]
+    verbs: ["get", "list", "watch"]
+    resources: [{ group: "", resources: ["nodes", "pods", "configmaps", "endpoints", "services"] }]
+  - level: None
+    nonResourceURLs: ["/healthz*", "/readyz*", "/livez*", "/version", "/metrics"]
+  - level: Metadata
+    resources: [{ group: "", resources: ["secrets"] }]
+  - level: RequestResponse
+    resources:
+      - { group: "rbac.authorization.k8s.io" }
+      - { group: "kyverno.io" }
+      - { group: "cilium.io" }
+  - level: RequestResponse
+    resources: [{ group: "", resources: ["pods/exec", "pods/attach", "pods/portforward", "serviceaccounts/token"] }]
+  - level: Request
+    verbs: ["create", "update", "patch", "delete"]
+  - level: Metadata
