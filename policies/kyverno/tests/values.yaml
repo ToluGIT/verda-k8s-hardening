@@ -1,4 +1,9 @@
-# the policies match on a namespace label; the CLI needs to be told what the namespaces look like
+# the policies match on a namespace label; tell the CLI what the namespace looks like
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Values
+metadata:
+  name: tenant-namespaces
 namespaceSelector:
   - name: team-a
-    labels: { tenant: "true" }
+    labels:
+      tenant: "true"
