@@ -26,3 +26,37 @@ spec:
     - name: c
       image: registry.example.internal/team/app:1.0.0
       securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
+---
+apiVersion: v1
+kind: Pod
+metadata: { name: dockerhub-random-account, namespace: team-a }
+spec:
+  securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+  containers:
+    - name: c
+      image: docker.io/someoneelse/app:1.0.0
+      securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
+---
+apiVersion: v1
+kind: Pod
+metadata: { name: untagged, namespace: team-a }
+spec:
+  securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+  containers:
+    - name: c
+      image: docker.io/library/busybox
+      securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
+---
+apiVersion: v1
+kind: Pod
+metadata: { name: bad-init-container, namespace: team-a }
+spec:
+  securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+  initContainers:
+    - name: init
+      image: docker.io/library/busybox:latest
+      securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
+  containers:
+    - name: c
+      image: docker.io/library/busybox:1.37
+      securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }

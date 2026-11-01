@@ -19,7 +19,7 @@ the agent is down and the per-node identity cache means policy stays enforced. T
 operator, then roll the DaemonSet with `maxUnavailable: 1` and a PodDisruptionBudget on anything that cannot lose a
 replica, and watch Hubble drop counts between nodes. The canary cluster goes first, a week ahead. The thing that
 actually breaks upgrades at scale is a config key that was renamed; the pre-flight is `cilium upgrade --dry-run`
-against the new chart in CI, not on a Tuesday night.
+against the new chart in CI, before the maintenance window.
 
 **Fleet CVE patching.** Three different clocks. Node OS: unattended security updates on, kernel reboots in a rolling
 drain with the same `maxUnavailable: 1`, surfaced per node by the Trivy node collector. Platform images (Cilium,

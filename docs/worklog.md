@@ -61,3 +61,13 @@ argo-cd chart version used: 10.11.6
   path stays on the list to revisit with a newer Kyverno.
 - Tenants on the signed digest (both signature formats). Trivy rescanned: 0 critical, 10 high. The critical-CVE alert
   resolved by itself. Loop closed: alert, triage, rebuild, sign, admit, clear.
+- Adversarial review pass (an independent reviewer, with the brief and the repo). Fixed: the reviewer SSH key was
+  unrestricted root on all three nodes, now forwarding-only to 127.0.0.1:6443 on cp-1; the reviewer role could not
+  port-forward, so the README's own tunnel commands would have failed, added create on pods/portforward; the registry
+  allow-list permitted any Docker Hub account, which is not an allow-list, now named publishers; the CI "apply
+  policies to the tenant manifests" step loaded zero resources (no recursion), now every file, and it fails on any
+  fail; actions pinned to commit SHAs, kyverno and syft downloads checksummed; the threat model, decisions and CVE
+  triage still described the state before signing landed; demo 05 had a hand-typed port list and no non-admin
+  vantage point; there was no audit-log evidence at all (demo/11 now); the Hubble excerpt in demo 02 only showed the
+  kubelet drops. Not changed: the node-to-node rule still accepts every port between the three nodes (noted in the
+  threat model as the wrong default), and the same-namespace policy is tenant isolation, not workload segmentation.

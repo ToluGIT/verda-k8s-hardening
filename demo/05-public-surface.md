@@ -1,21 +1,50 @@
 # Demo 05: public surface
 
-Date: 2026-11-01T09:45Z. From my laptop (149.241.162.239, the one allow-listed admin IP) against cp-1. The only ports that answer are 22 and 6443; from any other address 6443 is closed too (the ADMIN set in infra/nftables.conf).
+Date: 2026-11-01T19:10Z. Two vantage points: my laptop (149.241.162.239, the one address in the firewall's ADMIN set) and a GitHub Actions runner (.github/workflows/public-surface-probe.yaml), which is an address the firewall has never heard of. Same twelve ports, all three nodes.
 
 ```
-# from the admin IP
-  22     open
-  6443   open
-  10250  closed/filtered
-  2379   closed/filtered
-  2380   closed/filtered
-  8472   closed/filtered
-  4240   closed/filtered
-  4244   closed/filtered
-  9100   closed/filtered
-  30080  closed/filtered
+# from the admin IP. Command per port: nc -z -G 3 <ip> <port>
+  cp-1      65.108.33.68    22     open
+  cp-1      65.108.33.68    6443   open
+  cp-1      65.108.33.68    10250  closed/filtered
+  cp-1      65.108.33.68    10256  closed/filtered
+  cp-1      65.108.33.68    2379   closed/filtered
+  cp-1      65.108.33.68    2380   closed/filtered
+  cp-1      65.108.33.68    8472   closed/filtered
+  cp-1      65.108.33.68    4240   closed/filtered
+  cp-1      65.108.33.68    4244   closed/filtered
+  cp-1      65.108.33.68    9100   closed/filtered
+  cp-1      65.108.33.68    9153   closed/filtered
+  cp-1      65.108.33.68    30080  closed/filtered
+  worker-1  65.108.32.164   22     open
+  worker-1  65.108.32.164   6443   closed/filtered
+  worker-1  65.108.32.164   10250  closed/filtered
+  worker-1  65.108.32.164   10256  closed/filtered
+  worker-1  65.108.32.164   2379   closed/filtered
+  worker-1  65.108.32.164   2380   closed/filtered
+  worker-1  65.108.32.164   8472   closed/filtered
+  worker-1  65.108.32.164   4240   closed/filtered
+  worker-1  65.108.32.164   4244   closed/filtered
+  worker-1  65.108.32.164   9100   closed/filtered
+  worker-1  65.108.32.164   9153   closed/filtered
+  worker-1  65.108.32.164   30080  closed/filtered
+  worker-2  65.108.33.95    22     open
+  worker-2  65.108.33.95    6443   closed/filtered
+  worker-2  65.108.33.95    10250  closed/filtered
+  worker-2  65.108.33.95    10256  closed/filtered
+  worker-2  65.108.33.95    2379   closed/filtered
+  worker-2  65.108.33.95    2380   closed/filtered
+  worker-2  65.108.33.95    8472   closed/filtered
+  worker-2  65.108.33.95    4240   closed/filtered
+  worker-2  65.108.33.95    4244   closed/filtered
+  worker-2  65.108.33.95    9100   closed/filtered
+  worker-2  65.108.33.95    9153   closed/filtered
+  worker-2  65.108.33.95    30080  closed/filtered
 
-# the rule set on cp-1
+# from a GitHub Actions runner (workflow_dispatch; log pasted verbatim)
+RUNNER_PLACEHOLDER
+
+# the rule set on cp-1 (identical on the workers)
   table inet filter {
   	chain input {
   		type filter hook input priority filter; policy drop;
@@ -40,14 +69,14 @@ Date: 2026-11-01T09:45Z. From my laptop (149.241.162.239, the one allow-listed a
   	}
   }
 
-# packets dropped so far on cp-1 (kernel log, nft-drop prefix), by destination port
-  2519
-     1736 DPT=443
-      231 DPT=67
-      193 DPT=5678
-       27 DPT=80
-       12 DPT=5353
-       12 DPT=23
+# dropped packets so far on cp-1 (kernel log, nft-drop prefix), by destination port
+  42702
+    28963 DPT=443
+     4433 DPT=67
+     3454 DPT=5678
+      685 DPT=80
+      186 DPT=23
+       95 DPT=445
 ```
 
-Open from the internet: 22 (key-only SSH). Open from the admin IP: 6443. Everything else, including the kubelet, etcd and the VXLAN port, is reachable only from the other two nodes.
+From the admin IP: 22 and 6443 answer, nothing else. From the runner: 22 only. The kubelet, etcd, the VXLAN port, node-exporter and CoreDNS metrics are reachable from the other two nodes and from pods, and from nowhere else. The remaining exposure is SSH itself, key-only, and the reviewer key cannot open a shell (README).

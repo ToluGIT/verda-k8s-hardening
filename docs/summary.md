@@ -10,9 +10,10 @@ process activity on every node. kube-prometheus-stack carries four alerts and a 
 namespaces, team-a and team-b, each with its own service account, quota, and a default-deny network they can only
 leave for DNS and (team-a) api.github.com.
 
-Every control has a demo file with a real blocked attempt and the output: admission denials, Hubble drop records,
-RBAC refusals, quota failures, Tetragon exec events, port probes against the firewall, Trivy reports, and an alert
-that fires on the tenant image's 14 critical CVEs.
+Each preventive control has a demo file with a blocked attempt and the output: admission denials, Hubble drop
+records, RBAC refusals, quota failures, port probes against the firewall from an admin and a non-admin network,
+secrets unreadable in raw etcd. The detective controls show what they caught: Tetragon exec and file events, Trivy
+reports, the audit log, and an alert that fired on the tenant image's 14 critical CVEs and cleared after the rebuild.
 
 ## What worked
 
@@ -21,7 +22,7 @@ that fires on the tenant image's 14 critical CVEs.
 - Cilium default deny expressed as a clusterwide policy object, with the tenant allow rules alongside it in git.
   The Hubble output for a cross-tenant request says `POLICY_DENIED`, and the deny to the host and API server shows
   `denied by denylist`, which is exactly what you want a tenant to be able to read.
-- The alert fired on a real image. It was not planned, which is the best kind of evidence.
+- The alert fired on the tenant image as deployed, before anything was planted for a demo.
 - GitOps for the policies: a bad policy fails the Kyverno CLI tests in GitHub Actions before Argo CD can see it.
 
 ## What did not work, and what I did
@@ -53,11 +54,12 @@ mutual auth is stable; Tetragon enforcement for the two or three escape precurso
 per-tenant DNS allow-lists instead of `matchPattern: "*"`; a second control plane node; receivers on Alertmanager;
 Falco or a second sensor only if Tetragon's coverage turns out to have a gap.
 
-Signed images are done end to end (demo/09): the workflow builds, scans, pushes and cosign-signs the tenant image
-with its GitHub OIDC identity; Kyverno refuses anything on that registry path without that signature and rewrites
-tags to digests. Two things that happened on the way are worth more than the feature: the scan gate refused the
-first build because the new base image had a fixable critical CVE, and cosign v3's switch to Sigstore bundles broke
-Kyverno's default verifier until the workflow also wrote the legacy signature format. Both are in the worklog.
+Signed images are done for this repo's own image (demo/09): the workflow builds, scans, pushes and cosign-signs it
+with its GitHub OIDC identity; Kyverno refuses anything on that registry path without the signature and rewrites
+tags to digests. Images from the other allow-listed publishers are not signature-checked; see the threat model.
+Two things happened on the way: the scan gate refused the first build because the new base image had a fixable
+critical CVE, and cosign v3's switch to Sigstore bundles broke Kyverno's default verifier until the workflow also
+wrote the legacy signature format. Both are in the worklog.
 
 ## Cost and shutdown
 

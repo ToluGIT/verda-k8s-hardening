@@ -18,7 +18,7 @@ Start with `docs/summary.md` (one page). Then `demo/` for the proof, `docs/threa
 | `docs/scale.md` | what changes at 10 clusters / 500 nodes |
 | `docs/runbook.md` | the commands I ran, in order |
 | `docs/worklog.md` | what broke and what I did, written as it happened |
-| `demo/` | one file per control, each with a blocked attempt and the output; two Grafana screenshots |
+| `demo/` | one file per control with the attempt and the output (01 to 11); two Grafana screenshots |
 | `infra/` | kubeadm config, audit policy, encryption config shape, nftables rule set |
 | `bootstrap/` | Cilium values and the Argo CD install values and root app (the two things installed by hand) |
 | `platform/` | Argo CD Applications for Kyverno, Trivy, monitoring, Tetragon, policies and tenants; alert rules; dashboard |
@@ -30,11 +30,13 @@ Start with `docs/summary.md` (one page). Then `demo/` for the proof, `docs/threa
 ## Access for reviewers
 
 Nothing is exposed publicly except SSH (key only) and the API server to one admin IP. Everything else is reached
-through an SSH tunnel to the control plane. You need the SSH private key and the kubeconfig, both sent separately,
-not in this repo.
+through an SSH tunnel to the control plane. You need the reviewer SSH key and the reviewer kubeconfig, both sent
+separately, not in this repo. The key cannot open a shell: on cp-1 it is restricted to forwarding 127.0.0.1:6443.
+The kubeconfig is a ServiceAccount token bound to `platform/reviewer/reviewer-readonly.yaml`: get/list/watch on
+most things, no secrets, no exec, plus create on pods/portforward so the tunnels below work.
 
 ```sh
-# 1. API server: add your public IP to infra/nftables.conf ADMIN set on cp-1, or tunnel 6443
+# 1. API server through the tunnel (the key allows nothing else)
 ssh -i verda-reviewer -N -L 6443:127.0.0.1:6443 root@65.108.33.68 &
 export KUBECONFIG=./verda-reviewer.kubeconfig     # server: https://127.0.0.1:6443, read-only ClusterRole
 kubectl get nodes
@@ -49,10 +51,9 @@ kubectl -n argocd port-forward svc/argocd-server 8080:80
 open http://localhost:8080
 
 # 4. Hubble UI
-cilium hubble ui                                        # or: kubectl -n kube-system port-forward svc/hubble-ui 12000:80
+kubectl -n kube-system port-forward svc/hubble-ui 12000:80
 
-# 5. Tetragon events, live
-kubectl -n kube-system exec ds/tetragon -c tetragon -- tetra getevents -o compact --namespace team-a
+# 5. Tetragon events: the reviewer role has no exec, so read the demo logs or ask me to run it on a call
 ```
 
 | Node | IP | Role |
@@ -65,9 +66,9 @@ The cluster stays up until you tell me you are done with it. Cost is about $0.19
 
 ## Reproducing it
 
-`docs/runbook.md` has every command. The order matters: node prep, kubeadm init with `infra/kubeadm-config.yaml`,
-join the workers, Cilium from `bootstrap/cilium/values.yaml`, nftables, Argo CD from `bootstrap/argocd/`, then
-`kubectl apply -f bootstrap/argocd/root-app.yaml` and Argo CD does the rest from this repo.
+`docs/runbook.md` has the commands in order: node prep, kubeadm init with `infra/kubeadm-config.yaml`, join the
+workers, Cilium from `bootstrap/cilium/values.yaml`, nftables, Argo CD from `bootstrap/argocd/`, the root app, and
+the reviewer access. Argo CD does the rest from this repo.
 
 ## Tooling note
 

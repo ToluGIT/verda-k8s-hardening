@@ -1,4 +1,5 @@
-# Tenant images come from a short allow-list. Anything else is a question, not a deployment.
+# Tenant images come from a short allow-list of publishers, not whole registries: any Docker Hub account is not an
+# allow-list. Adding a publisher is a one-line pull request. Anything else is a question, not a deployment.
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
@@ -15,10 +16,10 @@ spec:
               namespaceSelector:
                 matchLabels: { tenant: "true" }
       validate:
-        message: "Images must come from docker.io, ghcr.io, quay.io or registry.k8s.io."
+        message: "Image publisher not on the allow-list (see policies/kyverno/restrict-image-registries.yaml)."
         pattern:
           spec:
             containers:
-              - image: "docker.io/* | ghcr.io/* | quay.io/* | registry.k8s.io/*"
+              - image: "docker.io/library/* | docker.io/nginxinc/* | ghcr.io/tolugit/verda-k8s-hardening/* | quay.io/cilium/* | registry.k8s.io/*"
             =(initContainers):
-              - image: "docker.io/* | ghcr.io/* | quay.io/* | registry.k8s.io/*"
+              - image: "docker.io/library/* | docker.io/nginxinc/* | ghcr.io/tolugit/verda-k8s-hardening/* | quay.io/cilium/* | registry.k8s.io/*"

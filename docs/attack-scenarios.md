@@ -30,7 +30,7 @@ Start: team-a's service account credentials (demo/03).
 | Bind cluster-admin to itself | Forbidden | no RBAC verbs in the Role; the API server's escalation check would refuse anyway |
 | List nodes, read kube-system secrets | Forbidden | nothing cluster-scoped granted |
 | Create a privileged pod to escape to the node | admission denied | Kyverno PSS restricted, Enforce (demo/01) |
-| Pull a pre-built malicious image from its own registry | admission denied | registry allow-list (demo/01) |
+| Pull a pre-built malicious image from a registry or Docker Hub account not on the publisher allow-list | admission denied | registry allow-list (demo/01). An image published under an allow-listed publisher is not caught by this rule; see the threat model |
 | Run `image:latest` to slip a changed image under an existing tag | admission denied | no-latest rule (demo/01) |
 
 ## 3. Noisy neighbour, deliberate or not

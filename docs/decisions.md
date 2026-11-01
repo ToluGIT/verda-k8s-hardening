@@ -34,13 +34,19 @@ this is a private network and the firewall's node rule becomes a subnet.
 **Tetragon observe-only, Falco not installed.** One eBPF sensor is enough to show the signal. Enforcement before a
 baseline exists produces false kills. Falco would duplicate Tetragon here.
 
-**No mTLS, no Harbor, no cosign yet.** Each is a real control and each is half a day. The brief says a defensible
-set, not everything. What is missing is listed, with the order I would add them.
+**No mTLS, no Harbor.** Each is a real control and each is half a day. The brief says a defensible set, not
+everything. What is missing is listed, with the order I would add them.
+
+**Signature verification scoped to our own registry path.** The tenants' image is built, scanned and signed by
+this repo and Kyverno refuses anything on that path without the signature. Images from other allow-listed
+publishers are not asked for a signature, because whose signature to trust for a tenant's own image is a product
+decision. The allow-list is publishers, not registries: `docker.io/*` would make it meaningless.
 
 **Reviewer access through SSH tunnels, not an ingress.** A public TLS endpoint for Grafana and Argo CD adds an
-exposed service to a cluster whose point is a small surface. The tunnel is two commands and uses the same key
-mechanism as everything else.
+exposed service to a cluster whose point is a small surface. The reviewer key can only forward 127.0.0.1:6443 on
+cp-1 (`restrict,port-forwarding,permitopen=...` in authorized_keys, no shell), and the kubeconfig is a read-only
+ServiceAccount token with create on pods/portforward so the Grafana and Argo CD tunnels work.
 
 **One Trivy dashboard, four alerts.** The community Trivy dashboard answers "what is vulnerable where". The alerts
 are the four things an on-call would want paged for: a critical CVE in a tenant, a burst of admission denials, a
-burst of policy drops, a security agent missing from a node. More alerts means more ignored alerts.
+burst of policy drops, a security agent missing from a node.

@@ -10,19 +10,24 @@ jobs:
   kyverno:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: install kyverno cli
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: install kyverno cli (pinned, checksummed)
         run: |
-          curl -fsSL https://github.com/kyverno/kyverno/releases/download/v1.19.2/kyverno-cli_v1.19.2_linux_x86_64.tar.gz | tar -xz kyverno
-          sudo install kyverno /usr/local/bin/kyverno
+          curl -fsSLo kyverno.tgz https://github.com/kyverno/kyverno/releases/download/v1.19.2/kyverno-cli_v1.19.2_linux_x86_64.tar.gz
+          echo '357eaf1df8bc24ddd5a73979fadeaae6a032e8710f11af264229756e4956bf4a  kyverno.tgz' | sha256sum -c -
+          tar -xzf kyverno.tgz kyverno && sudo install kyverno /usr/local/bin/kyverno
       - name: run policy tests
         run: kyverno test policies/kyverno/tests/
-      - name: apply policies to the tenant manifests (would any of our own workloads be denied?)
-        run: kyverno apply policies/kyverno/ --resource tenants/ --values-file policies/kyverno/tests/values.yaml 2>&1 | tail -5
+      - name: apply policies to every tenant manifest (would any of our own workloads be denied?)
+        run: |
+          kyverno apply policies/kyverno/*.yaml $(find tenants -name '*.yaml' -exec printf -- '--resource %s ' {} +) \
+            --values-file policies/kyverno/tests/values.yaml 2>&1 | tee apply.log | tail -5
+          grep -qE 'pass: [1-9]' apply.log
+          ! grep -qE 'fail: [1-9]' apply.log
   yaml:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: every manifest parses
         run: |
           pip -q install pyyaml

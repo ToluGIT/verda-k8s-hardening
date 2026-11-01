@@ -58,8 +58,9 @@ scp infra/kubeadm-config.yaml infra/audit-policy.yaml root@65.108.33.68:/root/
 mv /root/audit-policy.yaml /etc/kubernetes/audit/policy.yaml
 
 # secrets-at-rest key is generated on the host and never leaves it. infra/encryption.yaml.example shows the shape.
+scp infra/encryption.yaml.example root@65.108.33.68:/root/
 KEY=$(head -c 32 /dev/urandom | base64)
-sed "s|<base64 32 bytes.*>|$KEY|" encryption.yaml.example > /etc/kubernetes/enc/encryption.yaml
+sed "s|<base64 32 bytes.*>|$KEY|" /root/encryption.yaml.example > /etc/kubernetes/enc/encryption.yaml
 chmod 600 /etc/kubernetes/enc/encryption.yaml
 
 kubeadm init --config /root/kubeadm-config.yaml --upload-certs
@@ -91,3 +92,34 @@ cilium status --wait
 scp infra/nftables.conf root@<ip>:/etc/nftables.conf
 nft -c -f /etc/nftables.conf && nft -f /etc/nftables.conf && systemctl enable nftables
 ```
+
+## 6. Argo CD (from the laptop)
+
+```sh
+# read-only deploy key for the repo; the private half goes into the cluster, nowhere else
+ssh-keygen -t ed25519 -N '' -C 'argocd read-only deploy key' -f argocd_deploy_key
+gh repo deploy-key add argocd_deploy_key.pub -R ToluGIT/verda-k8s-hardening -t argocd
+kubectl create namespace argocd
+kubectl -n argocd create secret generic repo-verda-k8s-hardening \
+  --from-literal=type=git --from-literal=url=git@github.com:ToluGIT/verda-k8s-hardening.git \
+  --from-file=sshPrivateKey=argocd_deploy_key
+kubectl -n argocd label secret repo-verda-k8s-hardening argocd.argoproj.io/secret-type=repository
+helm repo add argo https://argoproj.github.io/argo-helm
+helm install argocd argo/argo-cd --version 10.11.6 -n argocd -f bootstrap/argocd/values.yaml
+kubectl apply -f bootstrap/argocd/root-app.yaml      # from here on Argo CD owns everything under platform/
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
+```
+
+## 7. Reviewer access
+
+```sh
+# cluster: the reviewer ServiceAccount and ClusterRole are in platform/reviewer/ (synced by Argo CD)
+kubectl -n reviewer create token reviewer --duration=720h        # goes into the reviewer kubeconfig, server 127.0.0.1:6443
+# grafana: a Viewer user, created through the API with the admin password from the monitoring-grafana secret
+# ssh: the reviewer public key on cp-1 only, restricted to the API server tunnel
+echo 'restrict,port-forwarding,permitopen="127.0.0.1:6443",command="/bin/false" ssh-ed25519 AAAA... verda reviewer' >> /root/.ssh/authorized_keys
+```
+
+## 8. Teardown
+
+Delete the three instances in the Verda console. Revoke the reviewer token and the deploy key.

@@ -23,21 +23,21 @@ $ kubectl -n team-a get pod web-f9798d7d4-c5x4d -o jsonpath='{.metadata.annotati
   kyverno.io/verify-images-scoped: {"version":1,"policies":{"/verify-image-signatures":{"cosign-keyless-github":{"ghcr.io/tolugit/verda-k8s-hardening/web@s
 
 # 2. the same path, a digest with no signature the policy accepts: refused
-$ kubectl -n team-a run t --image=ghcr.io/tolugit/verda-k8s-hardening/web@sha256:27451a1daa36b17e0658580ebce199b7b1fff3a4672d962701bacfd00bb44ff0 --dry-run=server ...
+$ kubectl -n team-a run sigtest --image=ghcr.io/tolugit/verda-k8s-hardening/web@sha256:27451a1daa36b17e0658580ebce199b7b1fff3a4672d962701bacfd00bb44ff0 --dry-run=server ...
 Error from server: admission webhook "mutate.kyverno.svc-fail" denied the request: 
 resource Pod/team-a/sigtest was blocked due to the following policies 
 verify-image-signatures:
   cosign-keyless-github: 'failed to verify image ghcr.io/tolugit/verda-k8s-hardening/web@sha256:27451a1daa36b17e0658580ebce199b7b1fff3a4672d962701bacfd00bb44ff0: .attestors[0].entries[0].keyless: no signatures found'
 
 # 3. a tampered digest: refused
-$ kubectl -n team-a run t --image=ghcr.io/tolugit/verda-k8s-hardening/web@sha256:000...000 --dry-run=server ...
+$ kubectl -n team-a run sigtest --image=ghcr.io/tolugit/verda-k8s-hardening/web@sha256:000...000 --dry-run=server ...
 Error from server: admission webhook "mutate.kyverno.svc-fail" denied the request: 
 resource Pod/team-a/sigtest was blocked due to the following policies 
 verify-image-signatures:
   cosign-keyless-github: 'failed to verify image ghcr.io/tolugit/verda-k8s-hardening/web@sha256:0000000000000000000000000000000000000000000000000000000000000000: .attestors[0].entries[0].keyless: no signatures found'
 
 # 4. a mutable tag on the protected path: Kyverno resolves it, verifies the digest, and rewrites the pod to the digest
-$ kubectl -n team-a run t --image=ghcr.io/tolugit/verda-k8s-hardening/web:main --dry-run=server -o jsonpath='{.metadata.annotations.kyverno\.io/verify-images}'
+$ kubectl -n team-a run sigtest --image=ghcr.io/tolugit/verda-k8s-hardening/web:main --dry-run=server -o jsonpath='{.metadata.annotations.kyverno\.io/verify-images}'
 {"ghcr.io/tolugit/verda-k8s-hardening/web@sha256:9592375ba07eb80306e76013419bb38fe9ce1694d1409c150997753f85cc6790":"pass"}
 
 ```

@@ -41,3 +41,18 @@ results:
     resources: [good]
     kind: Pod
     result: pass
+  - policy: restrict-image-registries
+    rule: allowed-registries
+    resources: [dockerhub-random-account]
+    kind: Pod
+    result: fail
+  - policy: disallow-latest-tag
+    rule: require-tag
+    resources: [untagged]
+    kind: Pod
+    result: fail
+  - policy: disallow-latest-tag
+    rule: no-latest
+    resources: [bad-init-container]
+    kind: Pod
+    result: fail

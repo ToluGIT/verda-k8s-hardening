@@ -35,16 +35,19 @@ there yet, it says so.
 | 8 | Create enough objects to hurt shared components | A5, A3 | ResourceQuota with pod and deployment counts, LimitRange defaults | demo/03 |
 | 9 | Run a known-vulnerable image and nobody notices | A4 | Trivy Operator scans every image; alert when a tenant image carries a critical CVE | demo/06, alert TenantImageHasCriticalCVE |
 | 10 | Get a shell in a pod and look around quietly | A2 | Tetragon records every exec with pod, binary and arguments; Hubble records every denied flow | demo/04, demo/02 |
-| 11 | Read secrets from an etcd backup or disk | A1 with disk access | EncryptionConfiguration (aescbc) for secrets at rest; key generated on cp-1, not in git | infra/encryption.yaml.example |
+| 11 | Read secrets out of an etcd snapshot or backup taken without the key | A4, or anyone holding a backup | EncryptionConfiguration (aescbc) for secrets at rest. The key lives on cp-1 next to etcd, so this does not help against someone with root on cp-1; it helps against copies of the data | demo/10 |
 | 12 | Push a bad policy or manifest to the cluster | A4 | Everything after the CNI goes through Argo CD from this repo; policies have CLI tests in CI; audit before enforce | .github/workflows/policy-tests.yaml |
-| 13 | Tamper with the audit trail | A2 after node compromise | API server audit log on the control plane node with secrets, RBAC, exec and policy changes at RequestResponse level | infra/audit-policy.yaml |
+| 13 | Probe limits quietly, weaken a policy, exec into a pod | A3, insider | API server audit log: secrets at Metadata (who, which, never the content), RBAC, Kyverno and Cilium objects and exec at RequestResponse, other writes at Request | demo/11 |
 
 ## What is not covered, and I know it
 
-- SSH is open to the internet (key only). The reviewers need a way in and I do not have their IPs. In a real
+- SSH is open to the internet (key only). The reviewers need a way in and I do not have their IPs. Their key is
+  restricted in authorized_keys to forwarding one port (127.0.0.1:6443) with no shell, on cp-1 only. In a real
   deployment this is a bastion or a VPN, and 22 joins the admin allow-list.
-- Image signatures are not verified at admission yet. Registry allow-list and tag pinning are a weaker substitute.
-  cosign plus Kyverno verifyImages is the next control; see docs/summary.md.
+- Image signatures are verified at admission only for images from this repo's registry path. A tenant that brings
+  an image from an allow-listed publisher (docker.io/library, nginxinc, quay.io/cilium, registry.k8s.io) is not asked
+  for a signature. Widening verifyImages to every tenant image means tenants sign their images with an identity we
+  trust, which is a product decision, not a policy line.
 - No mTLS between services. Cilium can do it, but it is still a beta feature and I would rather not promise it.
 - Tetragon is observe only. No enforcement policy, no sigkill on escape precursors. First you learn the baseline.
 - The audit log sits on the control plane node. If cp-1 is lost, so is the log. It needs shipping off the node.
@@ -52,3 +55,9 @@ there yet, it says so.
   means a Kyverno outage blocks the platform's own rollouts. I hit this once (see worklog). Open question.
 - Single control plane node. Not a security control, but worth saying.
 - The firewall relies on three fixed node IPs. Adding a node means editing a file and re-applying it on every node.
+- A compromised node has unrestricted host-level reach to the other two nodes: the node rule accepts every port from
+  the peer IPs. Narrowing it to the cluster ports (6443, 2379-2380, 10250, 8472/udp, 4240, 4244) is a small change
+  I did not make; the current rule is what let me find the Cilium problems quickly, and it is the wrong default.
+- Source-address filtering assumes the provider does anti-spoofing on the public network. Not evidenced.
+- Within a tenant namespace every pod can reach every other pod on every port. That is tenant isolation, not
+  workload segmentation. Per-app policies are the tenant's job and this design leaves them room to write them.

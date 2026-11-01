@@ -1,0 +1,20 @@
+# Probe the three nodes from a GitHub-hosted runner, which is an address the firewall has never heard of.
+# Run by hand (workflow_dispatch); the output is pasted into demo/05-public-surface.md.
+name: public surface probe
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: where am I
+        run: echo "runner public ip: $(curl -s https://api.ipify.org)"
+      - name: probe every node, every interesting port
+        run: |
+          for host in cp-1=65.108.33.68 worker-1=65.108.32.164 worker-2=65.108.33.95; do
+            n=${host%%=*}; ip=${host#*=}
+            for p in 22 6443 10250 10256 2379 2380 8472 4240 4244 9100 9153 30080; do
+              if timeout 4 bash -c "exec 3<>/dev/tcp/$ip/$p" 2>/dev/null; then r=open; else r=closed/filtered; fi
+              printf '%-9s %-15s %-6s %s\n' "$n" "$ip" "$p" "$r"
+            done
+          done
