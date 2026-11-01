@@ -2,7 +2,7 @@
 
 Take-home for the Kubernetes and Container Platform Security Specialist role. Three CPU VMs in FIN-01, kubeadm
 1.36, Cilium with kube-proxy replacement, Argo CD from this repo, Kyverno in Enforce, Trivy Operator, Tetragon,
-Prometheus and Grafana. Two tenant namespaces that cannot see each other.
+Prometheus and Grafana. Two tenant namespaces that cannot see each other, running an image this repo builds, scans and signs.
 
 Start with `docs/summary.md` (one page). Then `demo/` for the proof, `docs/threat-model.md` for the why.
 
@@ -22,7 +22,7 @@ Start with `docs/summary.md` (one page). Then `demo/` for the proof, `docs/threa
 | `infra/` | kubeadm config, audit policy, encryption config shape, nftables rule set |
 | `bootstrap/` | Cilium values and the Argo CD install values and root app (the two things installed by hand) |
 | `platform/` | Argo CD Applications for Kyverno, Trivy, monitoring, Tetragon, policies and tenants; alert rules; dashboard |
-| `policies/kyverno/` | PSS restricted, no :latest, registry allow-list, cosign verification; `tests/` for the CLI |
+| `policies/kyverno/` | PSS restricted, no :latest, registry allow-list, cosign signature verification; `tests/` for the CLI |
 | `network/cilium/` | clusterwide default deny, DNS carve-out, host and API server deny |
 | `tenants/` | team-a and team-b: namespace, RBAC, quota, network policy, app |
 | `app/` | the tenant image: Dockerfile and the workflow that builds, scans, signs it |

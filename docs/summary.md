@@ -44,6 +44,7 @@ that fires on the tenant image's 14 critical CVEs.
 - SSH open to the internet, key only: reviewers need a way in and I do not have their IPs.
 - Tetragon observe-only: enforcement before a baseline produces false kills.
 - Four alerts, not forty.
+- Two signature formats on every image until Kyverno's bundle verifier is sorted, instead of pinning an old cosign.
 
 ## What is missing
 
@@ -52,8 +53,11 @@ mutual auth is stable; Tetragon enforcement for the two or three escape precurso
 per-tenant DNS allow-lists instead of `matchPattern: "*"`; a second control plane node; receivers on Alertmanager;
 Falco or a second sensor only if Tetragon's coverage turns out to have a gap.
 
-Cosign signing and `verifyImages` are in the repo (`app/`, `.github/workflows/image.yaml`,
-`policies/kyverno/verify-image-signatures.yaml`); see docs/worklog.md for where the pipeline got to.
+Signed images are done end to end (demo/09): the workflow builds, scans, pushes and cosign-signs the tenant image
+with its GitHub OIDC identity; Kyverno refuses anything on that registry path without that signature and rewrites
+tags to digests. Two things that happened on the way are worth more than the feature: the scan gate refused the
+first build because the new base image had a fixable critical CVE, and cosign v3's switch to Sigstore bundles broke
+Kyverno's default verifier until the workflow also wrote the legacy signature format. Both are in the worklog.
 
 ## Cost and shutdown
 
