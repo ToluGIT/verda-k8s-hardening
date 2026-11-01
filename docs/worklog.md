@@ -39,3 +39,12 @@ argo-cd chart version used: 10.11.6
 - Image pipeline, first run: the Trivy gate failed the build. The fresh `1.29-alpine` base ships brotli-libs 1.2.0-r0
   with a critical (CVE-2026-111497) that has a fix. So the image was never pushed or signed, which is the point of the
   gate. Added `apk upgrade brotli-libs` to the Dockerfile instead of an ignore entry.
+- Image pipeline, second run: clean scan, pushed, signed keyless (GitHub OIDC), SBOM attested.
+  ghcr.io/tolugit/verda-k8s-hardening/web@sha256:1d7bac0b049f82bf18ec0f6217f2099ed5d210976728c8a8d1fc604ca0e32236
+  Then the boring blocker: a package pushed by a workflow in a private repo is private, and GitHub only lets you
+  change that in the web UI. Until it is public the tenants keep the Docker Hub image and the critical-CVE alert
+  keeps firing. The verifyImages policy is in Enforce already; it only covers the repo's GHCR path, so nothing else
+  is affected by the wait.
+- Tetragon policy loaded on all three nodes (monitor_only). The in-container read of /etc/shadow produced no file
+  event because the kernel denied the open; the policy hooks the read/write permission check. Wrote that down in the
+  demo rather than pretending.
