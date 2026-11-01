@@ -25,3 +25,18 @@ Date: 2026-11-01T10:10Z. The rule is platform/monitoring/security-alerts.yaml, d
 ```
 
 Alertmanager has only the default receiver; pointing it at a pager or Slack is a values change. The other three rules are inactive, which is correct for a quiet cluster: demos 01 and 02 produced a handful of denials each, below the spike thresholds on purpose.
+
+## Follow-up, 2026-11-01T18:40Z: the alert cleared
+
+The tenants moved to the image this repo builds (demo/09). Trivy rescanned it: 0 critical, 10 high (was 14 / 68).
+The metric behind the alert went to zero for both namespaces and the alert resolved on its own.
+
+```
+$ promql: sum by (namespace, image_digest) (trivy_image_vulnerabilities{severity="Critical", namespace=~"team-.*"})
+  team-a tolugit/verda-k8s-hardening/web sha256:9592375ba07e = 0
+  team-b tolugit/verda-k8s-hardening/web sha256:9592375ba07e = 0
+$ kubectl get vulnerabilityreports -n team-a   (summary)   crit=0 high=10
+```
+
+That is the whole loop the brief asks for: scan, alert, triage (docs/cve-triage.md), rebuild on a smaller base with
+the one remaining fixable critical patched, sign, admit, alert clears.

@@ -59,3 +59,5 @@ argo-cd chart version used: 10.11.6
   writes the legacy `.sig` tag (`--new-bundle-format=false`) alongside the bundle, and the policy is back on the
   default Cosign attestor. Two signatures of the same digest, one verifier path that is well trodden. The bundle
   path stays on the list to revisit with a newer Kyverno.
+- Tenants on the signed digest (both signature formats). Trivy rescanned: 0 critical, 10 high. The critical-CVE alert
+  resolved by itself. Loop closed: alert, triage, rebuild, sign, admit, clear.
