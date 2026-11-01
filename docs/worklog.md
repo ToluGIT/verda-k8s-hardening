@@ -48,3 +48,9 @@ argo-cd chart version used: 10.11.6
 - Tetragon policy loaded on all three nodes (monitor_only). The in-container read of /etc/shadow produced no file
   event because the kernel denied the open; the policy hooks the read/write permission check. Wrote that down in the
   demo rather than pretending.
+- Rolled the signed digest out to the tenants. Kyverno refused it: "no signatures found", while `cosign verify` on my
+  laptop passed. `cosign tree` showed why: cosign v3 (from cosign-installer v4) writes the signature as an OCI
+  referrer Sigstore bundle and no longer creates the `sha256-<digest>.sig` tag that Kyverno's default `Cosign`
+  attestor type reads. Kyverno 1.19 has `type: SigstoreBundle` for exactly this. One line in the policy.
+  Worth remembering: a signing tool upgrade on the CI side can silently break admission on the cluster side, and
+  the failure mode is "nothing deploys", which is the right failure mode.
