@@ -2,54 +2,71 @@
 
 ## What I built
 
-Three Verda CPU VMs in FIN-01: a kubeadm 1.36 control plane and two workers on public IPs. Cilium is the CNI and
-replaces kube-proxy, Hubble keeps the flow log. Argo CD syncs everything after the CNI from this repo. Kyverno
-enforces PSS restricted, an explicit tag or digest, a publisher allow-list, and cosign signatures (with digest
-rewriting) for the image this repo builds. Trivy Operator scans images, workload config and nodes. Tetragon records
-process and credential-file activity on every node. kube-prometheus-stack carries four alerts and a Trivy
-dashboard. Two tenants, team-a and team-b, each with its own service account, quota and a default-deny network they
-can only leave for DNS, and team-a for api.github.com.
+Three Verda CPU VMs in FIN-01: a kubeadm 1.36 control plane and two workers, public IPs only. Cilium is the CNI and
+replaces kube-proxy, and Hubble keeps the flow log, so every allowed and dropped connection is on record. Argo CD
+owns everything after the CNI, from this repo. Kyverno sits at admission with PSS restricted, an explicit tag or
+digest, a publisher allow-list, and signature verification for the image this repo builds. Trivy Operator scans
+images, workload config and the nodes. Tetragon watches process and credential-file activity on every node.
+Prometheus and Grafana carry four alerts and a Trivy dashboard. Two tenants, team-a and team-b, each with its own
+service account, quota and a default-deny network they can only leave for DNS, and in team-a's case api.github.com.
 
-Every preventive control has a demo with a blocked attempt and the output (demo/01 to 05, 09, 10). The detective
-controls show what they caught (06, 07, 08, 11), including an alert that fired on the tenant image's 14 critical
-CVEs and cleared after the rebuild.
+The point of the design is that a tenant is a namespace label. Label a namespace `tenant: "true"` and it inherits
+the admission policies, the default deny, the host and API server deny, and the quota, with nothing else to remember.
+
+Each preventive control has a demo with the attempt and the output (demo/01 to 05, 09, 10). The detective controls
+show what they caught (06, 07, 08, 11), including an alert that fired on the tenant image's 14 critical CVEs and
+went quiet after the rebuild.
 
 ## What worked
 
-- Audit first, then Enforce one commit later, after the policy reports showed both tenants clean. Nothing broke.
-- Default deny as a clusterwide Cilium policy in git. A tenant's cross-namespace request shows up in Hubble as
-  `POLICY_DENIED`, and the host and API server attempts as `denied by denylist`.
-- The alert fired on the image as deployed, not on anything planted. Triage, rebuild, sign, admit, and it cleared.
-- The signing pipeline refused to sign its own first build because the new base image had a fixable critical.
+- Audit first, Enforce one commit later. The policy reports showed both tenants clean under Audit, so switching to
+  Enforce changed nothing for the workloads and everything for the next bad pod. No one got paged.
+- Default deny as a clusterwide Cilium object in git, with the per-tenant allows next to it. When team-a reaches for
+  team-b the Hubble line says `POLICY_DENIED`; when it reaches for the kubelet or the API server it says
+  `denied by denylist`.
+- The critical-CVE alert fired on the image as it was deployed, before I had done anything to provoke it. Triage,
+  rebuild on a smaller base, sign, admit, and it resolved on its own.
+- The signing pipeline refused its own first build. The new alpine base had a fixable critical in brotli, so no
+  signature and no admission until the package was patched.
 
 ## What did not work, and what I did
 
-- `protectKernelDefaults: true` stopped kubelet on the Verda image until three sysctls were set. Kept the flag.
-- My nftables rule set started with `flush ruleset`, which deleted Cilium's iptables-nft rules. Pods lost DNS and
-  egress for about an hour. Scoped the firewall to its own table and moved Cilium masquerade to BPF.
-- Kyverno's fail-closed webhook blocked the monitoring stack's first sync while networking was broken, and Argo CD
-  waited on a Prometheus that never existed. Resynced, added a retry policy to every Application.
-- cosign v3 stores signatures as Sigstore bundles. Kyverno's default verifier wanted the legacy `.sig` tag and its
-  bundle verifier would not accept the bundle. The workflow now writes both formats.
-- Argo CD showed the Kyverno apps OutOfSync with an empty diff: server-side apply plus API server defaults. Diffed
-  live against git field by field and ignored exactly those fields.
+- `protectKernelDefaults: true` kept kubelet from starting on the Verda image. It wanted three sysctls the image
+  ships at zero. I set them and kept the flag; it was doing exactly what I asked it to do.
+- My nftables rule set opened with `flush ruleset`, which also removed Cilium's iptables-nft rules. Pods lost DNS and
+  egress for about an hour before `cilium-dbg status` showed masquerading had gone. The firewall now flushes only
+  its own table, and Cilium masquerades in BPF, so the two no longer share a dependency.
+- Kyverno's webhook is fail-closed, which is right for tenants. While networking was broken it also refused the
+  monitoring stack's Deployments, and Argo CD sat waiting for a Prometheus that would not exist. I resynced and gave
+  every Application a retry policy. Whether platform namespaces should fail open is an open question in the threat
+  model.
+- cosign v3 writes signatures as Sigstore bundles. Kyverno's default verifier looks for the legacy `.sig` tag, and
+  its bundle verifier would not accept the bundle either. The workflow now writes both formats; a signing-tool
+  upgrade should not be able to stop deploys silently.
+- Argo CD showed the Kyverno apps OutOfSync with an empty diff: server-side apply meeting API server defaults. I
+  diffed live against git field by field and ignored exactly those fields, nothing wider.
 
 ## Trade-offs
 
-- kubeadm over RKE2: more to set up, but every hardening flag is mine to explain.
-- Public IPs only: FIN-01 had capacity; node traffic crosses the public interface, allowed by source IP.
-- SSH open to the internet, key only, because reviewers need a way in and I do not have their IPs. The reviewer key
+- kubeadm over RKE2. Slower to stand up, but every hardening flag is one I chose and can explain.
+- Public IPs only. FIN-01 had capacity; node traffic crosses the public interface, allowed by source address. A
+  private network is the production answer.
+- SSH open to the internet, keys only. Reviewers need a way in and I do not have their addresses. The reviewer key
   can only forward the API server port.
-- Tetragon observe-only: enforcement before a baseline produces false kills.
-- Signature verification only for the repo's own registry path; other allow-listed publishers are not asked for one.
+- Tetragon in observe mode. Enforcing before you know the baseline produces false kills, and false kills get sensors
+  switched off.
+- Signatures verified only for the repo's own registry path. Whose signature to trust for a tenant's own image is a
+  product decision.
 
 ## What is missing
 
-In the order I would add them: ship the audit log off the control plane; narrow the node-to-node firewall rule to
-the cluster ports; persistent storage for the monitoring stack; mTLS once Cilium's mutual auth is stable; Tetragon
-enforcement for the two or three escape precursors that are never legitimate; per-tenant DNS allow-lists instead of
-`matchPattern: "*"`; a second control plane node; Alertmanager receivers; verification of the Helm charts Argo pulls.
+In the order I would add them: ship the audit log off the control plane node; narrow the node-to-node firewall rule
+to the cluster ports; persistent storage for the monitoring stack; mTLS between services, where Cilium's built-in
+mutual authentication is still marked beta and the alternative is a service mesh, which is a bigger decision;
+Tetragon enforcement, starting with the few actions that have no legitimate use inside a container and usually
+precede an escape, such as kernel module loads, host filesystem mounts and writes to `/proc/sys`; per-tenant DNS
+allow-lists instead of `matchPattern: "*"`; a second control plane node; Alertmanager receivers; verification of the
+Helm charts Argo pulls.
 
-## Cost and shutdown
-
-About $0.19 per hour for the three nodes. The cluster stays up until you say you are done, then I delete it.
+The cluster will stay running until you confirm the review is finished, then I will delete the three instances.
+Running cost is about $0.19 an hour.
