@@ -13,10 +13,6 @@ service account, quota and a default-deny network they can only leave for DNS, a
 The point of the design is that a tenant is a namespace label. Label a namespace `tenant: "true"` and it inherits
 the admission policies, the default deny, the host and API server deny, and the quota, with nothing else to remember.
 
-Each preventive control has a demo with the attempt and the output (demo/01 to 05, 09, 10). The detective controls
-show what they caught (06, 07, 08, 11), including an alert that fired on the tenant image's 14 critical CVEs and
-went quiet after the rebuild.
-
 ## What worked
 
 - Audit first, Enforce one commit later. The policy reports showed both tenants clean under Audit, so switching to
@@ -60,13 +56,18 @@ went quiet after the rebuild.
 
 ## What is missing
 
-In the order I would add them: ship the audit log off the control plane node; narrow the node-to-node firewall rule
-to the cluster ports; persistent storage for the monitoring stack; mTLS between services, where Cilium's built-in
-mutual authentication is still marked beta and the alternative is a service mesh, which is a bigger decision;
-Tetragon enforcement, starting with the few actions that have no legitimate use inside a container and usually
-precede an escape, such as kernel module loads, host filesystem mounts and writes to `/proc/sys`; per-tenant DNS
-allow-lists instead of `matchPattern: "*"`; a second control plane node; Alertmanager receivers; verification of the
-Helm charts Argo pulls.
+In the order I would add them:
+
+- Ship the audit log off the control plane node; today losing cp-1 loses the log.
+- Narrow the node-to-node firewall rule to the cluster ports instead of every port.
+- Persistent storage for Prometheus, Alertmanager and Grafana; a reschedule currently drops metrics and local users.
+- mTLS between services. Cilium's own mutual authentication is still marked beta; the alternative is a service mesh.
+- Tetragon enforcement, starting with actions that have no legitimate use in a container and usually precede an
+  escape: kernel module loads, host filesystem mounts, writes to `/proc/sys`.
+- Per-tenant DNS allow-lists instead of `matchPattern: "*"`, which leaves DNS as an exfiltration channel.
+- A second control plane node.
+- Alertmanager receivers, so the alerts page someone.
+- Verification of the Helm charts Argo pulls; they are version-pinned, not provenance-checked.
 
 The cluster will stay running until you confirm the review is finished, then I will delete the three instances.
 Running cost is about $0.19 an hour.
