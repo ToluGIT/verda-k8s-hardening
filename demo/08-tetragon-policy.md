@@ -1,4 +1,4 @@
-# Demo 08: runtime detection as a policy, not just visibility
+# Demo 08: runtime detection with a Tetragon policy
 
 Date: 2026-11-01T13:33Z. runtime/tetragon/sensitive-file-access.yaml watches reads and writes of /etc/shadow, /etc/sudoers, the kubelet and control-plane PKI directories and /root/.ssh, on the host and in every container. Delivered by Argo CD like everything else. Observe-only.
 

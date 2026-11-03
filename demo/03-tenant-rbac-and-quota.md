@@ -33,7 +33,7 @@ no
 $ kubectl auth can-i create pods -n team-a --as=system:serviceaccount:team-a:team-a-dev --subresource=exec
 no
 
-# a real attempt, not just can-i
+# the same two things, attempted
 $ kubectl -n team-b get secrets --as=system:serviceaccount:team-a:team-a-dev
 Error from server (Forbidden): secrets is forbidden: User "system:serviceaccount:team-a:team-a-dev" cannot list resource "secrets" in API group "" in the namespace "team-b"
 $ kubectl create clusterrolebinding team-a-admin --clusterrole=cluster-admin --serviceaccount=team-a:team-a-dev --as=system:serviceaccount:team-a:team-a-dev

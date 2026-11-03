@@ -15,7 +15,7 @@ Who can hurt what, and which control answers each one. Where there is no control
 | Actor | Starting position |
 |---|---|
 | A1 Internet | Any address, no credentials. Sees the three public IPs. |
-| A2 Compromised tenant workload | Code execution inside a team-a pod. Typical start of a real incident: a vulnerable app or a malicious image. |
+| A2 Compromised tenant workload | Code execution inside a team-a pod. Where most incidents start: a vulnerable app or a malicious image. |
 | A3 Malicious or careless tenant admin | Holds team-a's service account. Can create workloads in team-a. |
 | A4 Supply chain | Controls an image or a chart we pull, or a commit to this repo. |
 | A5 Noisy neighbour | Not malicious. A tenant whose workload exhausts something shared. |
@@ -41,8 +41,8 @@ Who can hurt what, and which control answers each one. Where there is no control
 ## What is not covered
 
 - SSH is open to the internet (key only). The reviewers need a way in and I do not have their IPs. Their key is
-  restricted in authorized_keys to forwarding one port (127.0.0.1:6443) with no shell, on cp-1 only. In a real
-  deployment this is a bastion or a VPN, and 22 joins the admin allow-list.
+  restricted in authorized_keys to forwarding one port (127.0.0.1:6443) with no shell, on cp-1 only. In production
+  this is a bastion or a VPN, and 22 joins the admin allow-list.
 - Image signatures are verified at admission only for images from this repo's registry path. A tenant that brings
   an image from an allow-listed publisher (docker.io/library, nginxinc, quay.io/cilium, registry.k8s.io) is not asked
   for a signature. Widening verifyImages to every tenant image means tenants sign their images with an identity we

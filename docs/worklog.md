@@ -36,9 +36,9 @@ Notes as I went. Dates are UK time. Where something broke I've kept the error te
   had run while pod networking was still broken, so the API server couldn't reach Kyverno and refused the
   Deployments. Argo then waited for a Prometheus that was never going to appear. Forced a resync and added a retry
   policy to every Application. Fail-closed is right for tenant namespaces; whether platform namespaces should be
-  fail-open is a real question and it's in the threat model.
+  fail-open is an open question and it's in the threat model.
 - Trivy: both tenant images (nginx-unprivileged 1.27.3) carry 14 critical CVEs. That means the critical-CVE alert
-  is going to fire on a real image, and it gave me the subject for the CVE triage note.
+  is going to fire on the deployed image, and it gave me the subject for the CVE triage note.
 - Image pipeline, first run: the Trivy gate failed the build. The fresh `1.29-alpine` base ships brotli-libs 1.2.0-r0
   with a critical (CVE-2026-111497) that has a fix, so the image was never pushed or signed. Added
   `apk upgrade brotli-libs` to the Dockerfile instead of an ignore entry.

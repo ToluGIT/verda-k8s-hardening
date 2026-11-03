@@ -1,6 +1,6 @@
 # Demo 07: a security alert that fires
 
-Date: 2026-11-01T10:10Z. The rule is platform/monitoring/security-alerts.yaml, delivered by Argo CD. The image is the real tenant image, not one planted for the demo; docs/cve-triage.md is what I would do about it.
+Date: 2026-11-01T10:10Z. The rule is platform/monitoring/security-alerts.yaml, delivered by Argo CD. The image is the one the tenants were running; docs/cve-triage.md is what I would do about it.
 
 ```
 # the four rules Prometheus loaded

@@ -27,7 +27,7 @@ the admission policies, the default deny, the host and API server deny, and the 
 ## What did not work, and what I did
 
 - `protectKernelDefaults: true` kept kubelet from starting on the Verda image. It wanted three sysctls the image
-  ships at zero. I set them and kept the flag; it was doing exactly what I asked it to do.
+  ships at zero. I set them and kept the flag; it was doing what I asked it to do.
 - My nftables rule set opened with `flush ruleset`, which also removed Cilium's iptables-nft rules. Pods lost DNS and
   egress for about an hour before `cilium-dbg status` showed masquerading had gone. The firewall now flushes only
   its own table, and Cilium masquerades in BPF, so the two no longer share a dependency.
@@ -39,7 +39,7 @@ the admission policies, the default deny, the host and API server deny, and the 
   its bundle verifier would not accept the bundle either. The workflow now writes both formats; a signing-tool
   upgrade should not be able to stop deploys silently.
 - Argo CD showed the Kyverno apps OutOfSync with an empty diff: server-side apply meeting API server defaults. I
-  diffed live against git field by field and ignored exactly those fields, nothing wider.
+  diffed live against git field by field and ignored those fields and no others.
 
 ## Trade-offs
 

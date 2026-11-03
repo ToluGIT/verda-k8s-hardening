@@ -10,7 +10,7 @@ CI job doesn't change; it's testing the same files.
 
 ## Break-glass
 
-Two situations need a documented way around the controls. A tenant who is genuinely blocked gets a Kyverno
+Two situations need a documented way around the controls. A tenant who is blocked by a policy gets a Kyverno
 PolicyException: scoped to their namespace, expiring automatically through a cleanup policy, and committed to the
 same repo so it's visible. An operator who has to act while Argo CD or Kyverno is down uses a break-glass kubeconfig
 held outside the cluster, with its own audit rule at RequestResponse and an alert the first time it's used. Argo
@@ -23,7 +23,7 @@ Cilium upgrades node by node and only the agent restarts; the datapath keeps for
 and the per-node identity cache keeps policy enforced. The order is: upgrade the operator, roll the DaemonSet with
 `maxUnavailable: 1`, keep a PodDisruptionBudget on anything that can't lose a replica, and watch Hubble drop counts
 between nodes as you go. The canary cluster goes first, a week ahead. In my experience what breaks CNI upgrades at
-scale is a renamed config key, so the real safeguard is running `cilium upgrade --dry-run` against the new chart in
+scale is a renamed config key, so the safeguard that matters is running `cilium upgrade --dry-run` against the new chart in
 CI before anyone touches a node.
 
 ## Patching CVEs across the fleet

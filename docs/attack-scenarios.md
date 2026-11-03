@@ -16,7 +16,7 @@ Start: a shell in team-a's web pod (as happens after an RCE in the app).
 | Exfiltrate to an arbitrary internet host | timeout | egress default deny; only api.github.com:443 allowed by FQDN | Hubble drop; the DNS lookup itself is logged by the DNS proxy |
 | Exfiltrate over DNS (encode data in query names) | queries resolve | **not prevented**: DNS to CoreDNS is allowed with `matchPattern: "*"` | Hubble DNS visibility records every query name; a rate or entropy rule would be the next control |
 
-The last row is an open item. Tightening `matchPattern` to the names a tenant actually needs closes it, at the cost
+The last row is an open item. Tightening `matchPattern` to the names a tenant needs closes it, at the cost
 of a per-tenant allow-list that someone has to maintain. For a platform where tenants bring arbitrary workloads
 I would start with visibility and alert on query volume per pod before restricting names.
 
