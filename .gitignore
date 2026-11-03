@@ -5,3 +5,5 @@ admin.conf
 *.pem
 .env
 infra/encryption.yaml
+.DS_Store
+.kube/
