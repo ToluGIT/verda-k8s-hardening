@@ -1,6 +1,4 @@
-# At 10 clusters and 500 nodes
-
-None of this is built. It's how the design would have to change, and what would stay the same.
+# At 10 clusters and 500 nodes (design only)
 
 ## Rolling out policy
 

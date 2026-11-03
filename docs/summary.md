@@ -15,15 +15,14 @@ the admission policies, the default deny, the host and API server deny, and the 
 
 ## What worked
 
-- Audit first, Enforce one commit later. The policy reports showed both tenants clean under Audit, so switching to
-  Enforce changed nothing for the workloads and everything for the next bad pod. No one got paged.
+- Audit first, Enforce one commit later. Policy reports clean under Audit, so the switch broke nothing.
 - Default deny as a clusterwide Cilium object in git, with the per-tenant allows next to it. When team-a reaches for
   team-b the Hubble line says `POLICY_DENIED`; when it reaches for the kubelet or the API server it says
   `denied by denylist`.
 - The critical-CVE alert fired on the image as it was deployed, before I had done anything to provoke it. Triage,
   rebuild on a smaller base, sign, admit, and it resolved on its own.
 - The signing pipeline refused its own first build. The new alpine base had a fixable critical in brotli, so no
-  signature and no admission until the package was patched.
+  signature and no admission until I patched the package. I'd have been annoyed if it hadn't.
 
 ## What did not work, and what I did
 
@@ -45,6 +44,12 @@ the admission policies, the default deny, the host and API server deny, and the 
 ## Trade-offs
 
 - kubeadm over RKE2. Slower to stand up, but every hardening flag is one I chose and can explain.
+- Kyverno over Gatekeeper. The platform team can read a Kyverno policy without learning Rego, and image verification
+  is built in.
+- Argo CD owns everything after the CNI. Cilium and Argo CD itself are installed with Helm because Argo needs a
+  network before it can run; from then on I used kubectl to attack the cluster, not to configure it.
+- Reviewer access over SSH tunnels. A public Grafana or Argo CD endpoint adds an exposed service to a cluster whose
+  point is a small surface.
 - Public IPs only. FIN-01 had capacity; node traffic crosses the public interface, allowed by source address. A
   private network is the production answer.
 - SSH open to the internet, keys only. Reviewers need a way in and I do not have their addresses. The reviewer key

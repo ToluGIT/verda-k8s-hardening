@@ -61,32 +61,17 @@ Notes as I went. Dates are UK time. Where something broke I've kept the error te
 - Tenants on the signed digest. Trivy rescanned: 0 critical, 10 high. The critical-CVE alert resolved on its own.
 
 ## Mon 2 Nov
-- Went back through everything against the brief, line by line, as if I were the reviewer. Things I'd got wrong: the
-  reviewer SSH key was unrestricted root on all three nodes, now forwarding-only to 127.0.0.1:6443 on cp-1; the
-  reviewer role couldn't port-forward, so the README's own tunnel commands would have failed, added create on
-  pods/portforward; the registry allow-list permitted any Docker Hub account, which isn't an allow-list, now named
-  publishers; the CI step that applies the policies to the tenant manifests was loading zero resources (no
-  recursion), now every file, and it fails on any fail; actions pinned to commit SHAs, kyverno and syft downloads
-  checksummed; the threat model, decisions and CVE triage still described the state before signing landed; demo 05
-  was a typed port list with no non-admin vantage point, now real probes from my IP and from a GitHub runner; there
-  was no audit-log evidence (demo/11 now); the Hubble excerpt in demo 02 only showed the kubelet drops.
-- Second read, on the access story. Reviewers would have had the Argo CD admin password, which can deploy anything
-  no matter how read-only the kubeconfig is; they now get a local `reviewer` account mapped to role:readonly (list
-  and view, no sync, no delete, checked with `argocd account can-i`). The audit policy was logging
-  serviceaccounts/token responses at RequestResponse, which puts live bearer tokens in audit.log; now Metadata. sshd
-  was described as key-only but never configured; password and keyboard-interactive auth are off on all nodes and
-  demo 05 shows `sshd -T`. The firewall now drops pod-CIDR sources arriving on eth0 before accepting pod-CIDR sources
-  from the Cilium interfaces. SecurityAgentDown fires on an absent DaemonSet, not only a degraded one. CI namespace
-  values now include team-b. Demo 01's registry case re-run against the publisher allow-list; demo 04 and 08 command
-  lines now match their recorded events; "pinned tags" corrected to what it is: an explicit tag is required, and only
-  the repo's own path gets rewritten to a digest.
-- Third read, on whether the evidence reproduces. Demo 05 was still showing the rule set from before the anti-spoof
-  rule, re-captured; commands that had "..." or were missing their quoting are now the full commands as typed; demo
-  03's quota section re-run with the events command shown and the self-heal revert explained; the image workflow was
-  building twice, once to scan and once to push, so the scanned and pushed images weren't provably the same bytes,
-  now it pushes the image it scanned and the base is pinned by digest; demo 11 still said token requests were at
-  RequestResponse; demo 06 now lists the cp-1 node report; "a bad policy fails CI before Argo sees it" was only true
-  with branch protection, which is now on for main (required checks: kyverno, yaml); the threat model now says the
-  monitoring stack has no persistence at all, and that Helm chart provenance isn't verified.
-- Still open, and written down as such: the node-to-node rule accepts every port between the three nodes; UDP 8472
-  can't be probed meaningfully from outside; the upstream signature on syft's checksum file isn't verified.
+- Went back through the whole thing against the brief, line by line, as if I were marking it. Found more than I
+  expected. The reviewer SSH key was plain root on all three nodes; it's now forwarding-only to 127.0.0.1:6443 on
+  cp-1. The reviewer role couldn't port-forward, so the README's own tunnel commands wouldn't have worked. The
+  registry allow-list let any Docker Hub account through, which isn't an allow-list; now named publishers. The CI
+  step that applies the policies to the tenant manifests was loading zero files. Reviewers were going to get the
+  Argo CD admin password; they get a read-only local account instead. The audit policy was logging token responses
+  at RequestResponse, which puts bearer tokens in the log. sshd was described as key-only but I'd never set it.
+- Also fixed while I was in there: anti-spoof drop for pod-CIDR sources on eth0, SecurityAgentDown firing on an
+  absent DaemonSet, actions pinned to SHAs and tool downloads checksummed, the image workflow pushing the exact
+  image it scanned instead of rebuilding, stale text in the threat model and triage note from before signing landed,
+  demo 05 re-run against all three nodes and from a GitHub runner, an audit-log demo (11), and a handful of demo
+  commands that had been abbreviated.
+- Still open: the node-to-node firewall rule accepts every port between the three nodes; UDP 8472 can't be probed
+  usefully from outside; syft's checksum file isn't signature-verified.

@@ -4,7 +4,7 @@ Take-home for the Kubernetes and Container Platform Security Specialist role. Th
 1.36, Cilium with kube-proxy replacement, Argo CD from this repo, Kyverno in Enforce, Trivy Operator, Tetragon,
 Prometheus and Grafana. Two tenant namespaces that cannot see each other, running an image this repo builds, scans and signs.
 
-Start with `docs/summary.md` (one page). Then `demo/` for the proof, `docs/threat-model.md` for the why.
+Start with `docs/summary.md` (one page). Then `demo/` for the proof and `docs/threat-model.md` for the why.
 
 ## Layout
 
@@ -12,7 +12,6 @@ Start with `docs/summary.md` (one page). Then `demo/` for the proof, `docs/threa
 |---|---|
 | `docs/summary.md` | the one-page deliverable: built, worked, did not, trade-offs, missing |
 | `docs/threat-model.md` | actors, attack paths, the control for each, the gaps |
-| `docs/decisions.md` | every non-obvious choice, five lines each |
 | `docs/attack-scenarios.md` | three scenarios run against the cluster, mapped to demo output |
 | `docs/cve-triage.md` | triage of the 14 criticals Trivy found in the tenant image |
 | `docs/scale.md` | what changes at 10 clusters / 500 nodes |
