@@ -1,5 +1,7 @@
 # Summary
 
+Repo layout and reviewer access are in the README. Proof for each control is in demo/.
+
 ## What I built
 
 Three Verda CPU VMs in FIN-01: a kubeadm 1.36 control plane and two workers, public IPs only. Cilium is the CNI and
