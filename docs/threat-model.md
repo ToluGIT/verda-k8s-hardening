@@ -1,7 +1,6 @@
 # Threat model
 
-Short on purpose. One page of who can hurt what, and which control answers each one. Where a control is not
-there yet, it says so.
+Who can hurt what, and which control answers each one. Where there is no control yet, it says so.
 
 ## What is being protected
 
@@ -39,7 +38,7 @@ there yet, it says so.
 | 12 | Push a bad policy or manifest to the cluster | A4 | Everything after the CNI goes through Argo CD from this repo; policies have CLI tests in CI and main is protected by those checks; audit before enforce. Not covered: the Helm charts Argo pulls (Kyverno, Trivy, monitoring, Tetragon) are version-pinned but their provenance is not verified and their rendered output is not reviewed in CI | .github/workflows/policy-tests.yaml |
 | 13 | Probe limits quietly, weaken a policy, exec into a pod | A3, insider | API server audit log: secrets at Metadata (who, which, never the content), RBAC, Kyverno and Cilium objects and exec at RequestResponse, other writes at Request | demo/11 |
 
-## What is not covered, and I know it
+## What is not covered
 
 - SSH is open to the internet (key only). The reviewers need a way in and I do not have their IPs. Their key is
   restricted in authorized_keys to forwarding one port (127.0.0.1:6443) with no shell, on cp-1 only. In a real
@@ -53,10 +52,10 @@ there yet, it says so.
 - The audit log sits on the control plane node. If cp-1 is lost, so is the log. It needs shipping off the node.
 - Kyverno's webhook is fail-closed everywhere except kube-system. Right for tenants; for platform namespaces it
   means a Kyverno outage blocks the platform's own rollouts. I hit this once (see worklog). Open question.
-- Single control plane node. Not a security control, but worth saying.
+- Single control plane node.
 - No persistent storage anywhere in the monitoring stack (no storage class on these VMs): Prometheus metrics,
   Alertmanager silences and notification state, and Grafana's local users all vanish when the pod is rescheduled.
-  Dashboards and alert rules come back from git. The demos' alert history is in the demo files, not in Prometheus.
+  Dashboards and alert rules come back from git. The alert history for the demos is in the demo files.
 - The firewall relies on three fixed node IPs. Adding a node means editing a file and re-applying it on every node.
 - A compromised node has unrestricted host-level reach to the other two nodes: the node rule accepts every port from
   the peer IPs. Narrowing it to the cluster ports (6443, 2379-2380, 10250, 8472/udp, 4240, 4244) is a small change

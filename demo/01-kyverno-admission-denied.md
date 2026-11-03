@@ -1,6 +1,6 @@
 # Demo 01: Kyverno admission, Enforce mode
 
-Date: 2026-11-01T09:43Z. Run from my laptop with the admin kubeconfig; commands shown in full, the --overrides JSON single-quoted as typed. All three attempts target team-a (tenant=true).
+Date: 2026-11-01T09:43Z. Run from my workstation with the admin kubeconfig; commands shown in full, the --overrides JSON single-quoted as typed. All three attempts target team-a (tenant=true).
 
 ```
 # policies in force

@@ -1,7 +1,6 @@
 # Runbook
 
-The commands I ran, in order, as I ran them. No wrapper scripts. If a step is repeated on several nodes it is
-written once and I ran it on each node over SSH.
+Commands in the order I ran them. Steps repeated on several nodes are written once; I ran them on each node over SSH.
 
 ## Nodes
 
@@ -87,7 +86,7 @@ kubeadm join 65.108.33.68:6443 --token <token> --discovery-token-ca-cert-hash sh
 kubectl get csr; kubectl certificate approve <pending csr names>
 ```
 
-## 4. Cilium (from the laptop, kubeconfig copied from /etc/kubernetes/admin.conf)
+## 4. Cilium (from my workstation, with /etc/kubernetes/admin.conf as kubeconfig)
 
 ```sh
 helm repo add cilium https://helm.cilium.io/
@@ -102,7 +101,7 @@ scp infra/nftables.conf root@<ip>:/etc/nftables.conf
 nft -c -f /etc/nftables.conf && nft -f /etc/nftables.conf && systemctl enable nftables
 ```
 
-## 6. Argo CD (from the laptop)
+## 6. Argo CD (from my workstation)
 
 ```sh
 # read-only deploy key for the repo; the private half goes into the cluster, nowhere else
@@ -119,28 +118,32 @@ kubectl apply -f bootstrap/argocd/root-app.yaml      # from here on Argo CD owns
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
 ```
 
-## 6b. Grafana admin secret (once, by hand)
+## 6b. Grafana admin secret (created once, outside git)
 
 ```sh
-# the kube-prometheus-stack chart reads the admin credentials from this secret instead of generating them
+# kube-prometheus-stack reads the admin credentials from this secret instead of generating a new one on every sync
 kubectl -n monitoring create secret generic grafana-admin --from-literal=admin-user=admin --from-literal=admin-password="$(openssl rand -base64 18)"
 ```
 
 ## 7. Reviewer access
 
+The ServiceAccount and ClusterRole are in platform/reviewer/ and arrive through Argo CD. The rest is one-off.
+
 ```sh
-# cluster: the reviewer ServiceAccount and ClusterRole are in platform/reviewer/ (synced by Argo CD)
-kubectl -n reviewer create token reviewer --duration=720h        # goes into the reviewer kubeconfig, server 127.0.0.1:6443
-# grafana: a Viewer user, created through the API with the admin password. Grafana has no persistent volume here
-# (no storage class on these VMs), so local users do not survive a Grafana pod restart and this has to be re-run;
-# dashboards are fine, they come from ConfigMaps. Found out when the admin-secret change restarted Grafana.
-# curl -u admin:$PW -H 'Content-Type: application/json' -X POST localhost:3000/api/admin/users -d '{"login":"reviewer","name":"Reviewer","password":"..."}'
-# argo cd: the local account `reviewer` (bootstrap/argocd/values.yaml) mapped to role:readonly; set its password:
-#   argocd account update-password --account reviewer   (as admin, over a port-forward)
-# ssh: the reviewer public key on cp-1 only, restricted to the API server tunnel
+# kubeconfig token (server 127.0.0.1:6443, tls-server-name cp-1)
+kubectl -n reviewer create token reviewer --duration=720h
+
+# grafana viewer. No persistent volume on these VMs, so re-run this if the Grafana pod restarts
+curl -u admin:$PW -H 'Content-Type: application/json' -X POST localhost:3000/api/admin/users \
+  -d '{"login":"reviewer","name":"Reviewer","password":"..."}'
+
+# argo cd read-only account (defined in bootstrap/argocd/values.yaml)
+argocd account update-password --account reviewer
+
+# ssh key on cp-1 only, tunnel to the API server and nothing else
 echo 'restrict,port-forwarding,permitopen="127.0.0.1:6443",command="/bin/false" ssh-ed25519 AAAA... verda reviewer' >> /root/.ssh/authorized_keys
 ```
 
 ## 8. Teardown
 
-Delete the three instances in the Verda console. Revoke the reviewer token and the deploy key.
+Delete the three instances in the Verda console. Delete the reviewer ServiceAccount token and the GitHub deploy key.

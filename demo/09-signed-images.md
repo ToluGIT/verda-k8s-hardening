@@ -3,7 +3,7 @@
 Date: 2026-11-01T18:39Z. The image is built, scanned, pushed and cosign-signed (keyless, GitHub OIDC) by .github/workflows/image.yaml. policies/kyverno/verify-image-signatures.yaml requires that signature on anything from ghcr.io/tolugit/verda-k8s-hardening/*.
 
 ```
-# the signature, verified from my laptop against the workflow identity
+# the signature, verified from my workstation against the workflow identity
 $ cosign verify --certificate-oidc-issuer https://token.actions.githubusercontent.com \
     --certificate-identity https://github.com/ToluGIT/verda-k8s-hardening/.github/workflows/image.yaml@refs/heads/main \
     ghcr.io/tolugit/verda-k8s-hardening/web@sha256:9592375ba07eb80306e76013419bb38fe9ce1694d1409c150997753f85cc6790

@@ -1,9 +1,9 @@
 # Demo 05: public surface
 
-Date: 2026-11-01T19:10Z. Two vantage points: my laptop (149.241.162.239, the one address in the firewall's ADMIN set) and a GitHub Actions runner (.github/workflows/public-surface-probe.yaml), which is an address the firewall has never heard of. Same twelve ports, all three nodes.
+Date: 2026-11-01T19:10Z. Two vantage points: my workstation (149.241.162.239, the one address in the firewall's ADMIN set) and a GitHub Actions runner (.github/workflows/public-surface-probe.yaml), which is an address the firewall has never heard of. Same twelve ports, all three nodes.
 
 ```
-# from the admin IP. Command per port: nc -z -G 3 <ip> <port>
+# from the admin IP (my workstation). Command per port: nc -z -G 3 <ip> <port>
   cp-1      65.108.33.68    22     open
   cp-1      65.108.33.68    6443   open
   cp-1      65.108.33.68    10250  closed/filtered

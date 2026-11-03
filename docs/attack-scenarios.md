@@ -1,7 +1,7 @@
 # Attack scenarios
 
-Three scenarios run against the cluster as built. Each one says what was tried, what stopped it, and what recorded
-it. The raw output is in the demo logs referenced.
+Three scenarios run against the cluster as built: what I tried, what stopped it, what recorded it. The raw output is
+in the demo logs referenced.
 
 ## 1. Compromised tenant workload tries to move laterally and call home
 
@@ -35,8 +35,8 @@ Start: team-a's service account credentials (demo/03).
 
 ## 3. Noisy neighbour, deliberate or not
 
-Start: a tenant creates far more objects than planned (the incident Vishal described: a quota on GPUs but not on
-deployment count, and Prometheus fell over).
+Start: a tenant creates far more objects than anyone planned for. This came up in the interview: a quota on GPUs but
+none on deployment count, and Prometheus fell over under the load.
 
 | Step | Result | Prevented by |
 |---|---|---|
@@ -48,9 +48,9 @@ deployment count, and Prometheus fell over).
 What is not covered: a tenant generating very high cardinality metrics or log volume. That is a per-namespace
 scrape limit on Prometheus and a log rate limit, neither of which is configured here.
 
-## Not run
+## Not attempted
 
-Container breakout through a kernel bug. No exploit was attempted; the controls that bound it are PSS restricted
-(no privileged, no host namespaces, seccomp RuntimeDefault, all capabilities dropped), `protectKernelDefaults` on
-the kubelet, and Tetragon watching for the exec that usually follows. A kernel CVE in that class is exactly the
-kind of advisory the triage note is for.
+A container breakout through a kernel bug. I didn't run an exploit. The controls that bound that class are PSS
+restricted (no privileged, no host namespaces, seccomp RuntimeDefault, all capabilities dropped),
+`protectKernelDefaults` on the kubelet, and Tetragon watching for the exec that usually follows. A kernel CVE of that
+kind is what the triage note is for.

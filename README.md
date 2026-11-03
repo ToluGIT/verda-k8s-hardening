@@ -20,7 +20,7 @@ Start with `docs/summary.md` (one page). Then `demo/` for the proof, `docs/threa
 | `docs/worklog.md` | what broke and what I did, written as it happened |
 | `demo/` | one file per control with the attempt and the output (01 to 11); two Grafana screenshots |
 | `infra/` | kubeadm config, audit policy, encryption config shape, nftables rule set |
-| `bootstrap/` | Cilium values and the Argo CD install values and root app (the two things installed by hand) |
+| `bootstrap/` | Cilium values and the Argo CD install values and root app (the two things installed before Argo CD exists) |
 | `platform/` | Argo CD Applications for Kyverno, Trivy, monitoring, Tetragon, policies and tenants; alert rules; dashboard |
 | `policies/kyverno/` | PSS restricted, no :latest, registry allow-list, cosign signature verification; `tests/` for the CLI |
 | `network/cilium/` | clusterwide default deny, DNS carve-out, host and API server deny |

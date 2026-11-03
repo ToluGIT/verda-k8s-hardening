@@ -49,8 +49,8 @@ Notes as I went. Dates are UK time. Where something broke I've kept the error te
 - Tetragon policy loaded on all three nodes (monitor_only). The in-container read of /etc/shadow produced no file
   event because the kernel refused the open; the policy hooks the read/write permission check, not the open. The
   demo says so.
-- Rolled the signed digest out to the tenants. Kyverno refused it: "no signatures found", while `cosign verify` on
-  my laptop passed. `cosign tree` showed why: cosign v3 (from cosign-installer v4) writes the signature as an OCI
+- Rolled the signed digest out to the tenants. Kyverno refused it: "no signatures found", while `cosign verify` from
+  my workstation passed. `cosign tree` showed why: cosign v3 (from cosign-installer v4) writes the signature as an OCI
   referrer Sigstore bundle and no longer creates the `sha256-<digest>.sig` tag that Kyverno's default `Cosign`
   attestor reads. Kyverno 1.19 has `type: SigstoreBundle` for this. One line in the policy.
 - `type: SigstoreBundle` got further ("sigstore bundle verification failed: no matching signatures found") but still
